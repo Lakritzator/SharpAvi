@@ -2,16 +2,12 @@
 // https://github.com/Corey-M/NAudio.Lame
 
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Text;
-using SharpAvi;
-using SharpAvi.Codecs;
 
 namespace SharpAvi.Codecs
 {
