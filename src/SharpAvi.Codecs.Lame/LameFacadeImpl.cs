@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
-namespace SharpAvi.Codecs.Runtime
+namespace SharpAvi.Codecs.Lame
 {
     public class LameFacadeImpl : Mp3AudioEncoderLame.ILameFacade, IDisposable
     {

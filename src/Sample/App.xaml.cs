@@ -2,7 +2,7 @@
 using System.IO;
 using System.Reflection;
 using System.Windows;
-using SharpAvi.Codecs;
+using SharpAvi.Codecs.Lame;
 
 namespace SharpAvi.Sample
 {
@@ -22,7 +22,7 @@ namespace SharpAvi.Sample
 #else
             var is64BitProcess = IntPtr.Size * 8 == 64;
 #endif
-            var dllName = string.Format("lameenc{0}.dll", is64BitProcess ? "64" : "32");
+            var dllName = $"lameenc{(is64BitProcess ? "64" : "32")}.dll";
             Mp3AudioEncoderLame.SetLameDllLocation(Path.Combine(asmDir, dllName));
         }
     }

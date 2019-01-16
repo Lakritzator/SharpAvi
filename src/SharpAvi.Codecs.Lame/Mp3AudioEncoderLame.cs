@@ -9,7 +9,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 
-namespace SharpAvi.Codecs
+namespace SharpAvi.Codecs.Lame
 {
     /// <summary>
     /// Mpeg Layer 3 (MP3) audio encoder using the LAME codec in external DLL.

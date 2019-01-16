@@ -1,12 +1,12 @@
-﻿using System.Diagnostics.Contracts;
+﻿using System;
+using System.Diagnostics.Contracts;
 using System.IO;
+using System.Threading;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System;
-using System.Threading;
 
-namespace SharpAvi.Codecs
+namespace SharpAvi.Codecs.MotionJpeg
 {
     /// <summary>
     /// Encodes frames in Motion JPEG format.
@@ -31,11 +31,7 @@ namespace SharpAvi.Codecs
     {
         private readonly Int32Rect rect;
         private readonly int quality;
-#if NET471
         private readonly ThreadLocal<WriteableBitmap> bitmapHolder;
-#else
-        private readonly WriteableBitmap bitmap;
-#endif
 
         /// <summary>
         /// Creates a new instance of <see cref="MotionJpegVideoEncoderWpf"/>.
@@ -55,13 +51,9 @@ namespace SharpAvi.Codecs
             rect = new Int32Rect(0, 0, width, height);
             this.quality = quality;
 
-#if NET471
             bitmapHolder = new ThreadLocal<WriteableBitmap>(
                 () => new WriteableBitmap(rect.Width, rect.Height, 96, 96, PixelFormats.Bgr32, null),
                 false);
-#else
-            bitmap = new WriteableBitmap(rect.Width, rect.Height, 96, 96, PixelFormats.Bgr32, null);
-#endif
         }
 
 

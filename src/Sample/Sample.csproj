@@ -51,9 +51,6 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="NAudio">
-      <HintPath>..\packages\NAudio.1.7.1\lib\net35\NAudio.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
@@ -107,6 +104,14 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\SharpAvi.Codecs.Lame\SharpAvi.Codecs.Lame.csproj">
+      <Project>{348f9e10-28e3-48c8-bc75-cc650db95b9b}</Project>
+      <Name>SharpAvi.Codecs.Lame</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\SharpAvi.Codecs.MotionJpeg\SharpAvi.Codecs.MotionJpeg.csproj">
+      <Project>{a4c2d595-1bad-4233-92a0-3493803c3507}</Project>
+      <Name>SharpAvi.Codecs.MotionJpeg</Name>
+    </ProjectReference>
     <ProjectReference Include="..\SharpAvi\SharpAvi.csproj">
       <Project>{07B83677-E9B8-4166-A383-CF3B3D393FBD}</Project>
       <Name>SharpAvi</Name>
@@ -119,6 +124,11 @@
     <Content Include="lameenc64.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="NAudio">
+      <Version>1.8.5</Version>
+    </PackageReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

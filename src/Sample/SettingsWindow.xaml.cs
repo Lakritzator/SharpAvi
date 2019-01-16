@@ -6,6 +6,7 @@ using System.Windows.Forms;
 using System.Windows.Interop;
 using NAudio.Wave;
 using SharpAvi.Codecs;
+using SharpAvi.Codecs.Lame;
 
 namespace SharpAvi.Sample
 {

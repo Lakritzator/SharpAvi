@@ -1,18 +1,17 @@
 ﻿using System;
-using System.Diagnostics.Contracts;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
 using System.Threading;
-#if NET471
 using System.Threading.Tasks;
-#endif
 using System.Windows;
 using NAudio.Wave;
 using SharpAvi.Codecs;
 using SharpAvi.Output;
 using System.Windows.Interop;
 using System.Diagnostics;
+using SharpAvi.Codecs.Lame;
+using SharpAvi.Codecs.MotionJpeg;
 
 namespace SharpAvi.Sample
 {
@@ -99,12 +98,7 @@ namespace SharpAvi.Sample
             }
             else if (codec == KnownFourCCs.Codecs.MotionJpeg)
             {
-                return writer.AddMotionJpegVideoStream(screenWidth, screenHeight, quality
-#if !NET471
-                    // Implementation of this encoder for .NET 3.5 requires single-threaded access
-                    , forceSingleThreadedAccess: true
-#endif
-                    );
+                return writer.AddMotionJpegVideoStream(screenWidth, screenHeight, quality);
             }
             else
             {
@@ -169,11 +163,7 @@ namespace SharpAvi.Sample
         {
             var stopwatch = new Stopwatch();
             var buffer = new byte[screenWidth * screenHeight * 4];
-#if NET471
             Task videoWriteTask = null;
-#else
-            IAsyncResult videoWriteResult = null;
-#endif
             var isFirstFrame = true;
             var shotsTaken = 0;
             var timeTillNextFrame = TimeSpan.Zero;
@@ -187,11 +177,8 @@ namespace SharpAvi.Sample
                 // Wait for the previous frame is written
                 if (!isFirstFrame)
                 {
-#if NET471
+                    // TODO: await
                     videoWriteTask.Wait();
-#else
-                    videoStream.EndWriteFrame(videoWriteResult);
-#endif
                     videoFrameWritten.Set();
                 }
 
@@ -203,11 +190,7 @@ namespace SharpAvi.Sample
                 }
 
                 // Start asynchronous (encoding and) writing of the new frame
-#if NET471
                 videoWriteTask = videoStream.WriteFrameAsync(true, buffer, 0, buffer.Length);
-#else
-                videoWriteResult = videoStream.BeginWriteFrame(true, buffer, 0, buffer.Length, null, null);
-#endif
 
                 timeTillNextFrame = TimeSpan.FromSeconds(shotsTaken / (double)writer.FramesPerSecond - stopwatch.Elapsed.TotalSeconds);
                 if (timeTillNextFrame < TimeSpan.Zero)
@@ -221,11 +204,8 @@ namespace SharpAvi.Sample
             // Wait for the last frame is written
             if (!isFirstFrame)
             {
-#if NET471
+                // TODO: Await
                 videoWriteTask.Wait();
-#else
-                videoStream.EndWriteFrame(videoWriteResult);
-#endif
             }
         }
 

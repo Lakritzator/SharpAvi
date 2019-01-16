@@ -23,9 +23,6 @@ namespace SharpAvi.Output
         private const int RIFF_AVIX_SIZE_TRESHOLD = int.MaxValue - 1024 * 1024;
 
         private readonly BinaryWriter fileWriter;
-#if !NET471
-        private readonly bool closeWriter;
-#endif
         private bool isClosed = false;
         private bool startedWriting = false;
         private readonly object syncWrite = new object();
