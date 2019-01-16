@@ -3,8 +3,13 @@ using System.Runtime.InteropServices;
 
 namespace SharpAvi.Codecs.Lame
 {
+    /// <summary>
+    /// This is the implementation of the ILameFacade, which assumes that lame_enc.dll is already loaded!
+    /// </summary>
     public class LameFacadeImpl : ILameFacade, IDisposable
     {
+        // This is the name of the lame encoded dll, which needs to be on the path of loaded before via LoadLibrary with the same name. 
+        private const string DLL_NAME = "lame_enc.dll";
         private readonly IntPtr _context;
         private bool _closed;
 
@@ -152,8 +157,6 @@ namespace SharpAvi.Codecs.Lame
 
 
         #region LAME DLL API
-
-        private const string DLL_NAME = "lame_enc.dll";
 
         [DllImport(DLL_NAME, CallingConvention = CallingConvention.Cdecl)]
         private static extern IntPtr lame_init();
