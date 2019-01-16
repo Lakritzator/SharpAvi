@@ -18,7 +18,7 @@ namespace SharpAvi.Codecs.Lame
     /// The class is designed for using only a single instance at a time.
     /// Find information about and downloads of the LAME project at http://lame.sourceforge.net/
     /// </remarks>
-    public partial class Mp3AudioEncoderLame : IAudioEncoder, IDisposable
+    public class Mp3AudioEncoderLame : IAudioEncoder, IDisposable
     {
         /// <summary>
         /// Supported output bit rates (in kilobits per second).
@@ -31,7 +31,7 @@ namespace SharpAvi.Codecs.Lame
 
         #region Loading LAME DLL
 
-        private static Type lameFacadeType;
+        private static Type _lameFacadeType;
 
         /// <summary>
         /// Sets the location of LAME DLL for using by this class.
@@ -51,12 +51,12 @@ namespace SharpAvi.Codecs.Lame
                 var loadResult = LoadLibrary(lameDllPath);
                 if (loadResult == IntPtr.Zero)
                 {
-                    throw new DllNotFoundException(string.Format("Library '{0}' could not be loaded.", lameDllPath));
+                    throw new DllNotFoundException($"Library '{lameDllPath}' could not be loaded.");
                 }
             }
 
             var facadeAsm = GenerateLameFacadeAssembly(libraryName);
-            lameFacadeType = facadeAsm.GetType(typeof(Mp3AudioEncoderLame).Namespace + ".Runtime.LameFacadeImpl");
+            _lameFacadeType = facadeAsm.GetType(typeof(Mp3AudioEncoderLame).Namespace + ".Runtime.LameFacadeImpl");
         }
 
         private static Assembly GenerateLameFacadeAssembly(string lameDllName)
@@ -90,7 +90,7 @@ namespace SharpAvi.Codecs.Lame
                 sourceReader.Close();
             }
 
-            var lameDllNameLiteral = string.Format("\"{0}\"", lameDllName);
+            var lameDllNameLiteral = $"\"{lameDllName}\"";
             source = source.Replace("\"lame_enc.dll\"", lameDllNameLiteral);
 
             return source;
@@ -111,8 +111,8 @@ namespace SharpAvi.Codecs.Lame
 
         private const int SAMPLE_BYTE_SIZE = 2;
 
-        private readonly ILameFacade lame;
-        private readonly byte[] formatData;
+        private readonly ILameFacade _lame;
+        private readonly byte[] _formatData;
 
         /// <summary>
         /// Creates a new instance of <see cref="Mp3AudioEncoderLame"/>.
@@ -130,19 +130,19 @@ namespace SharpAvi.Codecs.Lame
             Contract.Requires(sampleRate > 0);
             Contract.Requires(SupportedBitRates.Contains(outputBitRateKbps));
 
-            if (lameFacadeType == null)
+            if (_lameFacadeType == null)
             {
                 throw new InvalidOperationException("LAME DLL is not loaded. Call SetLameDllLocation first.");
             }
 
-            lame = (ILameFacade)Activator.CreateInstance(lameFacadeType);
-            lame.ChannelCount = channelCount;
-            lame.InputSampleRate = sampleRate;
-            lame.OutputBitRate = outputBitRateKbps;
+            _lame = (ILameFacade)Activator.CreateInstance(_lameFacadeType);
+            _lame.ChannelCount = channelCount;
+            _lame.InputSampleRate = sampleRate;
+            _lame.OutputBitRate = outputBitRateKbps;
 
-            lame.PrepareEncoding();
+            _lame.PrepareEncoding();
 
-            formatData = FillFormatData();
+            _formatData = FillFormatData();
         }
 
         /// <summary>
@@ -150,8 +150,7 @@ namespace SharpAvi.Codecs.Lame
         /// </summary>
         public void Dispose()
         {
-            var lameDisposable = lame as IDisposable;
-            if (lameDisposable != null)
+            if (_lame is IDisposable lameDisposable)
             {
                 lameDisposable.Dispose();
             }
@@ -162,7 +161,7 @@ namespace SharpAvi.Codecs.Lame
         /// </summary>
         public int EncodeBlock(byte[] source, int sourceOffset, int sourceCount, byte[] destination, int destinationOffset)
         {
-            return lame.Encode(source, sourceOffset, sourceCount / SAMPLE_BYTE_SIZE, destination, destinationOffset);
+            return _lame.Encode(source, sourceOffset, sourceCount / SAMPLE_BYTE_SIZE, destination, destinationOffset);
         }
 
         /// <summary>
@@ -170,7 +169,7 @@ namespace SharpAvi.Codecs.Lame
         /// </summary>
         public int Flush(byte[] destination, int destinationOffset)
         {
-            return lame.FinishEncoding(destination, destinationOffset);
+            return _lame.FinishEncoding(destination, destinationOffset);
         }
 
         /// <summary>
@@ -187,58 +186,37 @@ namespace SharpAvi.Codecs.Lame
         /// <summary>
         /// Number of audio channels.
         /// </summary>
-        public int ChannelCount
-        {
-            get { return lame.ChannelCount; }
-        }
+        public int ChannelCount => _lame.ChannelCount;
 
         /// <summary>
         /// Sample rate.
         /// </summary>
-        public int SamplesPerSecond
-        {
-            get { return lame.OutputSampleRate; }
-        }
+        public int SamplesPerSecond => _lame.OutputSampleRate;
 
         /// <summary>
         /// Bits per sample per single channel.
         /// </summary>
-        public int BitsPerSample
-        {
-            get { return SAMPLE_BYTE_SIZE * 8; }
-        }
+        public int BitsPerSample => SAMPLE_BYTE_SIZE * 8;
 
         /// <summary>
         /// Audio format.
         /// </summary>
-        public short Format
-        {
-            get { return AudioFormats.Mp3; }
-        }
+        public short Format => AudioFormats.Mp3;
 
         /// <summary>
         /// Byte rate of the stream.
         /// </summary>
-        public int BytesPerSecond
-        {
-            get { return lame.OutputBitRate * 1000 / 8; }
-        }
+        public int BytesPerSecond => _lame.OutputBitRate * 1000 / 8;
 
         /// <summary>
         /// Minimum amount of data.
         /// </summary>
-        public int Granularity
-        {
-            get { return 1; }
-        }
+        public int Granularity => 1;
 
         /// <summary>
         /// Format-specific data.
         /// </summary>
-        public byte[] FormatSpecificData
-        {
-            get { return formatData; }
-        }
+        public byte[] FormatSpecificData => _formatData;
 
 
         private byte[] FillFormatData()
@@ -249,9 +227,9 @@ namespace SharpAvi.Codecs.Lame
             {
                 writer.Write((ushort)1); // MPEGLAYER3_ID_MPEG
                 writer.Write(0x00000002U); // MPEGLAYER3_FLAG_PADDING_OFF
-                writer.Write((ushort)lame.FrameSize); // nBlockSize
+                writer.Write((ushort)_lame.FrameSize); // nBlockSize
                 writer.Write((ushort)1); // nFramesPerBlock
-                writer.Write((ushort)lame.EncoderDelay);
+                writer.Write((ushort)_lame.EncoderDelay);
             }
             return mp3Data.ToArray();
         }

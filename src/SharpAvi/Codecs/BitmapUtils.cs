@@ -3,7 +3,7 @@ using System.Diagnostics.Contracts;
 
 namespace SharpAvi.Codecs
 {
-    internal class BitmapUtils
+    internal static class BitmapUtils
     {
         public static unsafe void Bgr32ToBgr24(byte[] source, int srcOffset, byte[] destination, int destOffset, int pixelCount)
         {

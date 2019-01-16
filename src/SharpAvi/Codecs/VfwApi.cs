@@ -88,20 +88,11 @@ namespace SharpAvi.Codecs
             private fixed char szDescription[128];
             private fixed char szDriver[128];
 
-            public bool SupportsQuality
-            {
-                get { return (flags & VIDCF_QUALITY) == VIDCF_QUALITY; }
-            }
+            public bool SupportsQuality => (flags & VIDCF_QUALITY) == VIDCF_QUALITY;
 
-            public bool SupportsFastTemporalCompression
-            {
-                get { return (flags & VIDCF_FASTTEMPORALC) == VIDCF_FASTTEMPORALC; }
-            }
+            public bool SupportsFastTemporalCompression => (flags & VIDCF_FASTTEMPORALC) == VIDCF_FASTTEMPORALC;
 
-            public bool RequestsCompressFrames
-            {
-                get { return (flags & VIDCF_COMPRESSFRAMES) == VIDCF_COMPRESSFRAMES; }
-            }
+            public bool RequestsCompressFrames => (flags & VIDCF_COMPRESSFRAMES) == VIDCF_COMPRESSFRAMES;
 
             public string Name
             {

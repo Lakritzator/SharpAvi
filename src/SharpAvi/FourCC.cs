@@ -11,8 +11,8 @@ namespace SharpAvi
     /// </remarks>
     public struct FourCC
     {
-        private readonly uint valueDWord;
-        private readonly string valueString;
+        private readonly uint _valueDWord;
+        private readonly string _valueString;
 
         /// <summary>
         /// Creates a new instance of <see cref="FourCC"/> with an integer value.
@@ -20,8 +20,8 @@ namespace SharpAvi
         /// <param name="value">Integer value of FOURCC.</param>
         public FourCC(uint value)
         {
-            valueDWord = value;
-            valueString = new string
+            _valueDWord = value;
+            _valueString = new string
                               (
                                   new[]
                                   {
@@ -50,8 +50,8 @@ namespace SharpAvi
             // Allow only printable ASCII characters
             Contract.Requires(Contract.ForAll(value, c => ' ' <= c && c <= '~'));
 
-            valueString = value.PadRight(4);
-            valueDWord = (uint)valueString[0] + ((uint)valueString[1] << 8) + ((uint)valueString[2] << 16) + ((uint)valueString[3] << 24);
+            _valueString = value.PadRight(4);
+            _valueDWord = (uint)_valueString[0] + ((uint)_valueString[1] << 8) + ((uint)_valueString[2] << 16) + ((uint)_valueString[3] << 24);
         }
 
         /// <summary>
@@ -62,8 +62,8 @@ namespace SharpAvi
         /// </returns>
         public override string ToString()
         {
-            var isPrintable = valueString.All(c => ' ' <= c && c <= '~');
-            return isPrintable ? valueString : valueDWord.ToString("X8");
+            var isPrintable = _valueString.All(c => ' ' <= c && c <= '~');
+            return isPrintable ? _valueString : _valueDWord.ToString("X8");
         }
 
         /// <summary>
@@ -71,7 +71,7 @@ namespace SharpAvi
         /// </summary>
         public override int GetHashCode()
         {
-            return valueDWord.GetHashCode();
+            return _valueDWord.GetHashCode();
         }
 
         /// <summary>
@@ -83,10 +83,8 @@ namespace SharpAvi
             {
                 return (FourCC)obj == this;
             }
-            else
-            {
-                return base.Equals(obj);
-            }
+
+            return base.Equals(obj);
         }
 
 
@@ -111,7 +109,7 @@ namespace SharpAvi
         /// </summary>
         public static explicit operator uint(FourCC value)
         {
-            return value.valueDWord;
+            return value._valueDWord;
         }
 
         /// <summary>
@@ -119,7 +117,7 @@ namespace SharpAvi
         /// </summary>
         public static explicit operator string(FourCC value)
         {
-            return value.valueString;
+            return value._valueString;
         }
 
         /// <summary>
@@ -127,7 +125,7 @@ namespace SharpAvi
         /// </summary>
         public static bool operator ==(FourCC value1, FourCC value2)
         {
-            return value1.valueDWord == value2.valueDWord;
+            return value1._valueDWord == value2._valueDWord;
         }
 
         /// <summary>

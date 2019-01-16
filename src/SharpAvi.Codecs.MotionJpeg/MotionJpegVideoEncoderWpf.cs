@@ -29,9 +29,9 @@ namespace SharpAvi.Codecs.MotionJpeg
     /// </remarks>
     public class MotionJpegVideoEncoderWpf : IVideoEncoder
     {
-        private readonly Int32Rect rect;
-        private readonly int quality;
-        private readonly ThreadLocal<WriteableBitmap> bitmapHolder;
+        private readonly Int32Rect _rect;
+        private readonly int _quality;
+        private readonly ThreadLocal<WriteableBitmap> _bitmapHolder;
 
         /// <summary>
         /// Creates a new instance of <see cref="MotionJpegVideoEncoderWpf"/>.
@@ -48,11 +48,11 @@ namespace SharpAvi.Codecs.MotionJpeg
             Contract.Requires(height > 0);
             Contract.Requires(1 <= quality && quality <= 100);
 
-            rect = new Int32Rect(0, 0, width, height);
-            this.quality = quality;
+            _rect = new Int32Rect(0, 0, width, height);
+            _quality = quality;
 
-            bitmapHolder = new ThreadLocal<WriteableBitmap>(
-                () => new WriteableBitmap(rect.Width, rect.Height, 96, 96, PixelFormats.Bgr32, null),
+            _bitmapHolder = new ThreadLocal<WriteableBitmap>(
+                () => new WriteableBitmap(_rect.Width, _rect.Height, 96, 96, PixelFormats.Bgr32, null),
                 false);
         }
 
@@ -60,30 +60,18 @@ namespace SharpAvi.Codecs.MotionJpeg
         #region IVideoEncoder Members
 
         /// <summary>Video codec.</summary>
-        public FourCC Codec
-        {
-            get { return KnownFourCCs.Codecs.MotionJpeg; }
-        }
+        public FourCC Codec => KnownFourCCs.Codecs.MotionJpeg;
 
         /// <summary>
         /// Number of bits per pixel in encoded image.
         /// </summary>
-        public BitsPerPixel BitsPerPixel
-        {
-            get { return SharpAvi.BitsPerPixel.Bpp24; }
-        }
+        public BitsPerPixel BitsPerPixel => BitsPerPixel.Bpp24;
 
         /// <summary>
-        /// Maximum size of encoded frmae.
+        /// Maximum size of encoded frame.
+        /// Assume that JPEG is always less than raw bitmap when dimensions are not tiny
         /// </summary>
-        public int MaxEncodedSize
-        {
-            get
-            {
-                // Assume that JPEG is always less than raw bitmap when dimensions are not tiny
-                return Math.Max(rect.Width * rect.Height * 4, 1024);
-            }
-        }
+        public int MaxEncodedSize => Math.Max(_rect.Width * _rect.Height * 4, 1024);
 
         /// <summary>
         /// Encodes a frame.
@@ -91,14 +79,12 @@ namespace SharpAvi.Codecs.MotionJpeg
         /// <seealso cref="IVideoEncoder.EncodeFrame"/>
         public int EncodeFrame(byte[] source, int srcOffset, byte[] destination, int destOffset, out bool isKeyFrame)
         {
-#if NET471
-            var bitmap = bitmapHolder.Value;
-#endif
-            bitmap.WritePixels(rect, source, rect.Width * 4, srcOffset);
+            var bitmap = _bitmapHolder.Value;
+            bitmap.WritePixels(_rect, source, _rect.Width * 4, srcOffset);
 
             var encoderImpl = new JpegBitmapEncoder
             {
-                QualityLevel = quality
+                QualityLevel = _quality
             };
             encoderImpl.Frames.Add(BitmapFrame.Create(bitmap));
 

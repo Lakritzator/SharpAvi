@@ -52,7 +52,7 @@ namespace SharpAvi
             {
                 Contract.Requires(0 <= streamIndex && streamIndex <= 99);
 
-                return string.Format("{0:00}wb", streamIndex);
+                return $"{streamIndex:00}wb";
             }
 
             /// <summary>Gets the identifier of an index chunk.</summary>
@@ -61,7 +61,7 @@ namespace SharpAvi
             {
                 Contract.Requires(0 <= streamIndex && streamIndex <= 99);
 
-                return string.Format("ix{0:00}", streamIndex);
+                return $"ix{streamIndex:00}";
             }
         }
 

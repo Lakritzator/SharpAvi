@@ -17,16 +17,16 @@ namespace SharpAvi.Sample
 {
     internal class Recorder : IDisposable
     {
-        private readonly int screenWidth;
-        private readonly int screenHeight;
-        private readonly AviWriter writer;
-        private readonly IAviVideoStream videoStream;
-        private readonly IAviAudioStream audioStream;
-        private readonly WaveInEvent audioSource;
-        private readonly Thread screenThread;
-        private readonly ManualResetEvent stopThread = new ManualResetEvent(false);
-        private readonly AutoResetEvent videoFrameWritten = new AutoResetEvent(false);
-        private readonly AutoResetEvent audioBlockWritten = new AutoResetEvent(false);
+        private readonly int _screenWidth;
+        private readonly int _screenHeight;
+        private readonly AviWriter _writer;
+        private readonly IAviVideoStream _videoStream;
+        private readonly IAviAudioStream _audioStream;
+        private readonly WaveInEvent _audioSource;
+        private readonly Thread _screenThread;
+        private readonly ManualResetEvent _stopThread = new ManualResetEvent(false);
+        private readonly AutoResetEvent _videoFrameWritten = new AutoResetEvent(false);
+        private readonly AutoResetEvent _audioBlockWritten = new AutoResetEvent(false);
 
         public Recorder(string fileName, 
             FourCC codec, int quality, 
@@ -38,55 +38,55 @@ namespace SharpAvi.Sample
                 toDevice = source.CompositionTarget.TransformToDevice;
             }
 
-            screenWidth = (int)Math.Round(SystemParameters.PrimaryScreenWidth * toDevice.M11);
-            screenHeight = (int)Math.Round(SystemParameters.PrimaryScreenHeight * toDevice.M22);
+            _screenWidth = (int)Math.Round(SystemParameters.PrimaryScreenWidth * toDevice.M11);
+            _screenHeight = (int)Math.Round(SystemParameters.PrimaryScreenHeight * toDevice.M22);
 
             // Create AVI writer and specify FPS
-            writer = new AviWriter(fileName)
+            _writer = new AviWriter(fileName)
             {
                 FramesPerSecond = 10,
                 EmitIndex1 = true,
             };
 
             // Create video stream
-            videoStream = CreateVideoStream(codec, quality);
+            _videoStream = CreateVideoStream(codec, quality);
             // Set only name. Other properties were when creating stream, 
             // either explicitly by arguments or implicitly by the encoder used
-            videoStream.Name = "Screencast";
+            _videoStream.Name = "Screencast";
 
             if (audioSourceIndex >= 0)
             {
                 var waveFormat = ToWaveFormat(audioWaveFormat);
 
-                audioStream = CreateAudioStream(waveFormat, encodeAudio, audioBitRate);
+                _audioStream = CreateAudioStream(waveFormat, encodeAudio, audioBitRate);
                 // Set only name. Other properties were when creating stream, 
                 // either explicitly by arguments or implicitly by the encoder used
-                audioStream.Name = "Voice";
+                _audioStream.Name = "Voice";
 
-                audioSource = new WaveInEvent
+                _audioSource = new WaveInEvent
                 {
                     DeviceNumber = audioSourceIndex,
                     WaveFormat = waveFormat,
                     // Buffer size to store duration of 1 frame
-                    BufferMilliseconds = (int)Math.Ceiling(1000 / writer.FramesPerSecond),
+                    BufferMilliseconds = (int)Math.Ceiling(1000 / _writer.FramesPerSecond),
                     NumberOfBuffers = 3,
                 };
-                audioSource.DataAvailable += audioSource_DataAvailable;
+                _audioSource.DataAvailable += audioSource_DataAvailable;
             }
 
-            screenThread = new Thread(RecordScreen)
+            _screenThread = new Thread(RecordScreen)
             {
                 Name = typeof(Recorder).Name + ".RecordScreen",
                 IsBackground = true
             };
 
-            if (audioSource != null)
+            if (_audioSource != null)
             {
-                videoFrameWritten.Set();
-                audioBlockWritten.Reset();
-                audioSource.StartRecording();
+                _videoFrameWritten.Set();
+                _audioBlockWritten.Reset();
+                _audioSource.StartRecording();
             }
-            screenThread.Start();
+            _screenThread.Start();
         }
 
         private IAviVideoStream CreateVideoStream(FourCC codec, int quality)
@@ -94,23 +94,22 @@ namespace SharpAvi.Sample
             // Select encoder type based on FOURCC of codec
             if (codec == KnownFourCCs.Codecs.Uncompressed)
             {
-                return writer.AddUncompressedVideoStream(screenWidth, screenHeight);
+                return _writer.AddUncompressedVideoStream(_screenWidth, _screenHeight);
             }
-            else if (codec == KnownFourCCs.Codecs.MotionJpeg)
+
+            if (codec == KnownFourCCs.Codecs.MotionJpeg)
             {
-                return writer.AddMotionJpegVideoStream(screenWidth, screenHeight, quality);
+                return _writer.AddMotionJpegVideoStream(_screenWidth, _screenHeight, quality);
             }
-            else
-            {
-                return writer.AddMpeg4VideoStream(screenWidth, screenHeight, (double)writer.FramesPerSecond,
-                    // It seems that all tested MPEG-4 VfW codecs ignore the quality affecting parameters passed through VfW API
-                    // They only respect the settings from their own configuration dialogs, and Mpeg4VideoEncoder currently has no support for this
-                    quality: quality,
-                    codec: codec,
-                    // Most of VfW codecs expect single-threaded use, so we wrap this encoder to special wrapper
-                    // Thus all calls to the encoder (including its instantiation) will be invoked on a single thread although encoding (and writing) is performed asynchronously
-                    forceSingleThreadedAccess: true);
-            }
+
+            return _writer.AddMpeg4VideoStream(_screenWidth, _screenHeight, (double)_writer.FramesPerSecond,
+                // It seems that all tested MPEG-4 VfW codecs ignore the quality affecting parameters passed through VfW API
+                // They only respect the settings from their own configuration dialogs, and Mpeg4VideoEncoder currently has no support for this
+                quality: quality,
+                codec: codec,
+                // Most of VfW codecs expect single-threaded use, so we wrap this encoder to special wrapper
+                // Thus all calls to the encoder (including its instantiation) will be invoked on a single thread although encoding (and writing) is performed asynchronously
+                forceSingleThreadedAccess: true);
         }
 
         private IAviAudioStream CreateAudioStream(WaveFormat waveFormat, bool encode, int bitRate)
@@ -119,15 +118,13 @@ namespace SharpAvi.Sample
             if (encode)
             {
                 // LAME DLL path is set in App.OnStartup()
-                return writer.AddMp3AudioStream(waveFormat.Channels, waveFormat.SampleRate, bitRate);
+                return _writer.AddMp3AudioStream(waveFormat.Channels, waveFormat.SampleRate, bitRate);
             }
-            else
-            {
-                return writer.AddAudioStream(
-                    channelCount: waveFormat.Channels,
-                    samplesPerSecond: waveFormat.SampleRate,
-                    bitsPerSample: waveFormat.BitsPerSample);
-            }
+
+            return _writer.AddAudioStream(
+                waveFormat.Channels,
+                waveFormat.SampleRate,
+                waveFormat.BitsPerSample);
         }
 
         private static WaveFormat ToWaveFormat(SupportedWaveFormat waveFormat)
@@ -145,31 +142,31 @@ namespace SharpAvi.Sample
 
         public void Dispose()
         {
-            stopThread.Set();
-            screenThread.Join();
-            if (audioSource != null)
+            _stopThread.Set();
+            _screenThread.Join();
+            if (_audioSource != null)
             {
-                audioSource.StopRecording();
-                audioSource.DataAvailable -= audioSource_DataAvailable;
+                _audioSource.StopRecording();
+                _audioSource.DataAvailable -= audioSource_DataAvailable;
             }
 
             // Close writer: the remaining data is written to a file and file is closed
-            writer.Close();
+            _writer.Close();
 
-            stopThread.Close();
+            _stopThread.Close();
         }
 
         private void RecordScreen()
         {
             var stopwatch = new Stopwatch();
-            var buffer = new byte[screenWidth * screenHeight * 4];
+            var buffer = new byte[_screenWidth * _screenHeight * 4];
             Task videoWriteTask = null;
             var isFirstFrame = true;
             var shotsTaken = 0;
             var timeTillNextFrame = TimeSpan.Zero;
             stopwatch.Start();
 
-            while (!stopThread.WaitOne(timeTillNextFrame))
+            while (!_stopThread.WaitOne(timeTillNextFrame))
             {
                 GetScreenshot(buffer);
                 shotsTaken++;
@@ -179,22 +176,26 @@ namespace SharpAvi.Sample
                 {
                     // TODO: await
                     videoWriteTask.Wait();
-                    videoFrameWritten.Set();
+                    _videoFrameWritten.Set();
                 }
 
-                if (audioStream != null)
+                if (_audioStream != null)
                 {
-                    var signalled = WaitHandle.WaitAny(new WaitHandle[] {audioBlockWritten, stopThread});
-                    if (signalled == 1)
+                    var signaled = WaitHandle.WaitAny(new WaitHandle[] {_audioBlockWritten, _stopThread});
+                    if (signaled == 1)
+                    {
                         break;
+                    }
                 }
 
                 // Start asynchronous (encoding and) writing of the new frame
-                videoWriteTask = videoStream.WriteFrameAsync(true, buffer, 0, buffer.Length);
+                videoWriteTask = _videoStream.WriteFrameAsync(true, buffer, 0, buffer.Length);
 
-                timeTillNextFrame = TimeSpan.FromSeconds(shotsTaken / (double)writer.FramesPerSecond - stopwatch.Elapsed.TotalSeconds);
+                timeTillNextFrame = TimeSpan.FromSeconds(shotsTaken / (double)_writer.FramesPerSecond - stopwatch.Elapsed.TotalSeconds);
                 if (timeTillNextFrame < TimeSpan.Zero)
+                {
                     timeTillNextFrame = TimeSpan.Zero;
+                }
 
                 isFirstFrame = false;
             }
@@ -211,11 +212,11 @@ namespace SharpAvi.Sample
 
         private void GetScreenshot(byte[] buffer)
         {
-            using (var bitmap = new Bitmap(screenWidth, screenHeight))
+            using (var bitmap = new Bitmap(_screenWidth, _screenHeight))
             using (var graphics = Graphics.FromImage(bitmap))
             {
-                graphics.CopyFromScreen(0, 0, 0, 0, new System.Drawing.Size(screenWidth, screenHeight));
-                var bits = bitmap.LockBits(new Rectangle(0, 0, screenWidth, screenHeight), ImageLockMode.ReadOnly, PixelFormat.Format32bppRgb);
+                graphics.CopyFromScreen(0, 0, 0, 0, new System.Drawing.Size(_screenWidth, _screenHeight));
+                var bits = bitmap.LockBits(new Rectangle(0, 0, _screenWidth, _screenHeight), ImageLockMode.ReadOnly, PixelFormat.Format32bppRgb);
                 Marshal.Copy(bits.Scan0, buffer, 0, buffer.Length);
                 bitmap.UnlockBits(bits);
 
@@ -226,12 +227,14 @@ namespace SharpAvi.Sample
 
         private void audioSource_DataAvailable(object sender, WaveInEventArgs e)
         {
-            var signalled = WaitHandle.WaitAny(new WaitHandle[] { videoFrameWritten, stopThread });
-            if (signalled == 0)
+            var signaled = WaitHandle.WaitAny(new WaitHandle[] { _videoFrameWritten, _stopThread });
+            if (signaled != 0)
             {
-                audioStream.WriteBlock(e.Buffer, 0, e.BytesRecorded);
-                audioBlockWritten.Set();
+                return;
             }
+
+            _audioStream.WriteBlock(e.Buffer, 0, e.BytesRecorded);
+            _audioBlockWritten.Set();
         }
     }
 }

@@ -9,8 +9,8 @@ namespace SharpAvi.Output
     /// </summary>
     internal sealed class SequentialInvoker
     {
-        private readonly object sync = new object();
-        private Task lastTask;
+        private readonly object _sync = new object();
+        private Task _lastTask;
 
         /// <summary>
         /// Creates a new instance of <see cref="SequentialInvoker"/>.
@@ -21,7 +21,7 @@ namespace SharpAvi.Output
             tcs.SetResult(true);
 
             // Initialize lastTask to already completed task
-            lastTask = tcs.Task;
+            _lastTask = tcs.Task;
         }
 
         /// <summary>
@@ -36,12 +36,13 @@ namespace SharpAvi.Output
             Contract.Requires(action != null);
 
             Task prevTask;
+            // TODO: Check if TaskCreationOptions.RunContinuationsAsynchronously is needed
             var tcs = new TaskCompletionSource<bool>();
 
-            lock (sync)
+            lock (_sync)
             {
-                prevTask = lastTask;
-                lastTask = tcs.Task;
+                prevTask = _lastTask;
+                _lastTask = tcs.Task;
             }
 
             try
@@ -77,10 +78,10 @@ namespace SharpAvi.Output
             Contract.Requires(action != null);
 
             Task result;
-            lock (sync)
+            lock (_sync)
             {
-                result = lastTask.ContinueWith(_ => action.Invoke());
-                lastTask = result;
+                result = _lastTask.ContinueWith(_ => action.Invoke());
+                _lastTask = result;
             }
 
             return result;
@@ -95,9 +96,9 @@ namespace SharpAvi.Output
         public void WaitForPendingInvocations()
         {
             Task taskToWait;
-            lock (sync)
+            lock (_sync)
             {
-                taskToWait = lastTask;
+                taskToWait = _lastTask;
             }
             taskToWait.Wait();
         }

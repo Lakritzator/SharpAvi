@@ -54,15 +54,9 @@ namespace SharpAvi.Codecs
         [ContractClassFor(typeof(IVideoEncoder))]
         internal abstract class VideoEncoderContract : IVideoEncoder
         {
-            public FourCC Codec
-            {
-                get { throw new NotImplementedException(); }
-            }
+            public FourCC Codec => throw new NotImplementedException();
 
-            public BitsPerPixel BitsPerPixel
-            {
-                get { throw new NotImplementedException(); }
-            }
+            public BitsPerPixel BitsPerPixel => throw new NotImplementedException();
 
             public int MaxEncodedSize
             {

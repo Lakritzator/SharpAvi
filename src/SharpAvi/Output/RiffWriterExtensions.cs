@@ -6,30 +6,30 @@ namespace SharpAvi.Output
 {
     internal static class RiffWriterExtensions
     {
-        public static RiffItem OpenChunk(this BinaryWriter writer, FourCC fourcc, int expectedDataSize = -1)
+        public static RiffItem OpenChunk(this BinaryWriter writer, FourCC fourCc, int expectedDataSize = -1)
         {
             Contract.Requires(writer != null);
             Contract.Requires(expectedDataSize <= int.MaxValue - RiffItem.ITEM_HEADER_SIZE);
 
-            writer.Write((uint)fourcc);
+            writer.Write((uint)fourCc);
             writer.Write((uint)(expectedDataSize >= 0 ? expectedDataSize : 0));
 
             return new RiffItem(writer.BaseStream.Position, expectedDataSize);
         }
 
-        public static RiffItem OpenList(this BinaryWriter writer, FourCC fourcc)
+        public static RiffItem OpenList(this BinaryWriter writer, FourCC fourCc)
         {
             Contract.Requires(writer != null);
 
-            return writer.OpenList(fourcc, KnownFourCCs.ListTypes.List);
+            return writer.OpenList(fourCc, KnownFourCCs.ListTypes.List);
         }
 
-        public static RiffItem OpenList(this BinaryWriter writer, FourCC fourcc, FourCC listType)
+        public static RiffItem OpenList(this BinaryWriter writer, FourCC fourCc, FourCC listType)
         {
             Contract.Requires(writer != null);
 
             var result = writer.OpenChunk(listType);
-            writer.Write((uint)fourcc);
+            writer.Write((uint)fourCc);
             return result;
         }
 
@@ -62,7 +62,8 @@ namespace SharpAvi.Output
             }
         }
 
-        private static readonly byte[] cleanBuffer = new byte[1024];
+        // array with 0 values
+        private static readonly byte[] CleanBuffer = new byte[1024];
 
         public static void SkipBytes(this BinaryWriter writer, int count)
         {
@@ -71,8 +72,8 @@ namespace SharpAvi.Output
 
             while (count > 0)
             {
-                var toWrite = Math.Min(count, cleanBuffer.Length);
-                writer.Write(cleanBuffer, 0, toWrite);
+                var toWrite = Math.Min(count, CleanBuffer.Length);
+                writer.Write(CleanBuffer, 0, toWrite);
                 count -= toWrite;
             }
         }

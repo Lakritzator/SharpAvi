@@ -102,7 +102,7 @@
                                   SelectedValuePath="Key"
                                   SelectedValue="{Binding SelectedAudioSourceIndex, Mode=TwoWay}"/>
                         
-                        <CheckBox Grid.Row="2" Grid.Column="2"
+                        <CheckBox Grid.Row="2" Grid.Column="1"
                                   Content="Stereo"
                                   IsChecked="{Binding UseStereo}"/>
                         

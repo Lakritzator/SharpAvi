@@ -57,9 +57,18 @@ namespace SharpAvi.Codecs
             var encoderFactory = codec.HasValue
                 ? new Func<IVideoEncoder>(() => new Mpeg4VideoEncoderVcm(width, height, fps, frameCount, quality, codec.Value))
                 : new Func<IVideoEncoder>(() => new Mpeg4VideoEncoderVcm(width, height, fps, frameCount, quality));
+#if NET471
             var encoder = forceSingleThreadedAccess
                 ? new SingleThreadedVideoEncoderWrapper(encoderFactory)
                 : encoderFactory.Invoke();
+#else
+            if (forceSingleThreadedAccess)
+            {
+                throw new NotSupportedException("SingleThreadedVideoEncoderWrapper is not yet available for netstandard");
+            }
+
+            var encoder = encoderFactory.Invoke();
+#endif
             return writer.AddEncodingVideoStream(encoder, true, width, height);
         }
     }

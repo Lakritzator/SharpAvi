@@ -16,19 +16,15 @@ namespace SharpAvi.Output
         {
             Contract.Requires(baseStream != null);
 
-            this.baseStream = baseStream;
+            _baseStream = baseStream;
         }
 
-        protected IAviVideoStreamInternal BaseStream
-        {
-            get { return baseStream; }
-        }
-        private readonly IAviVideoStreamInternal baseStream;
+        protected IAviVideoStreamInternal BaseStream => _baseStream;
+        private readonly IAviVideoStreamInternal _baseStream;
 
         public virtual void Dispose()
         {
-            var baseStreamDisposable = baseStream as IDisposable;
-            if (baseStreamDisposable != null)
+            if (_baseStream is IDisposable baseStreamDisposable)
             {
                 baseStreamDisposable.Dispose();
             }
@@ -36,82 +32,70 @@ namespace SharpAvi.Output
 
         public virtual int Width
         {
-            get { return baseStream.Width; }
-            set { baseStream.Width = value; }
+            get { return _baseStream.Width; }
+            set { _baseStream.Width = value; }
         }
 
         public virtual int Height
         {
-            get { return baseStream.Height; }
-            set { baseStream.Height = value; }
+            get { return _baseStream.Height; }
+            set { _baseStream.Height = value; }
         }
 
         public virtual BitsPerPixel BitsPerPixel
         {
-            get { return baseStream.BitsPerPixel; }
-            set { baseStream.BitsPerPixel = value; }
+            get { return _baseStream.BitsPerPixel; }
+            set { _baseStream.BitsPerPixel = value; }
         }
 
         public virtual FourCC Codec
         {
-            get { return baseStream.Codec; }
-            set { baseStream.Codec = value; }
+            get { return _baseStream.Codec; }
+            set { _baseStream.Codec = value; }
         }
 
         public virtual void WriteFrame(bool isKeyFrame, byte[] frameData, int startIndex, int length)
         {
-            baseStream.WriteFrame(isKeyFrame, frameData, startIndex, length);
+            _baseStream.WriteFrame(isKeyFrame, frameData, startIndex, length);
         }
 
         public virtual Task WriteFrameAsync(bool isKeyFrame, byte[] frameData, int startIndex, int length)
         {
-            return baseStream.WriteFrameAsync(isKeyFrame, frameData, startIndex, length);
+            return _baseStream.WriteFrameAsync(isKeyFrame, frameData, startIndex, length);
         }
 
-        public int FramesWritten
-        {
-            get { return baseStream.FramesWritten; }
-        }
+        public int FramesWritten => _baseStream.FramesWritten;
 
-        public int Index
-        {
-            get { return baseStream.Index; }
-        }
+        public int Index => _baseStream.Index;
 
         public virtual string Name
         {
-            get { return baseStream.Name; }
-            set { baseStream.Name = value; }
+            get { return _baseStream.Name; }
+            set { _baseStream.Name = value; }
         }
 
-        public FourCC StreamType
-        {
-            get { return baseStream.StreamType; }
-        }
+        public FourCC StreamType => _baseStream.StreamType;
 
-        public FourCC ChunkId
-        {
-            get { return baseStream.ChunkId; }
-        }
+        public FourCC ChunkId => _baseStream.ChunkId;
 
         public virtual void PrepareForWriting()
         {
-            baseStream.PrepareForWriting();
+            _baseStream.PrepareForWriting();
         }
 
         public virtual void FinishWriting()
         {
-            baseStream.FinishWriting();
+            _baseStream.FinishWriting();
         }
 
         public void WriteHeader()
         {
-            baseStream.WriteHeader();
+            _baseStream.WriteHeader();
         }
 
         public void WriteFormat()
         {
-            baseStream.WriteFormat();
+            _baseStream.WriteFormat();
         }
     }
 }

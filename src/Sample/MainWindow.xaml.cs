@@ -4,7 +4,6 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Threading;
 using NAudio.Wave;
-using SharpAvi.Codecs;
 using SharpAvi.Codecs.Lame;
 
 namespace SharpAvi.Sample
@@ -18,8 +17,8 @@ namespace SharpAvi.Sample
         {
             InitializeComponent();
 
-            recordingTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
-            recordingTimer.Tick += recordingTimer_Tick;
+            _recordingTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
+            _recordingTimer.Tick += recordingTimer_Tick;
             DataContext = this;
 
             InitDefaultSettings();
@@ -30,10 +29,10 @@ namespace SharpAvi.Sample
 
         #region Recording
 
-        private readonly DispatcherTimer recordingTimer;
-        private readonly Stopwatch recordingStopwatch = new Stopwatch();
-        private Recorder recorder;
-        private string lastFileName;
+        private readonly DispatcherTimer _recordingTimer;
+        private readonly Stopwatch _recordingStopwatch = new Stopwatch();
+        private Recorder _recorder;
+        private string _lastFileName;
 
         private static readonly DependencyPropertyKey IsRecordingPropertyKey =
             DependencyProperty.RegisterReadOnly("IsRecording", typeof(bool), typeof(MainWindow), new PropertyMetadata(false));
@@ -68,44 +67,52 @@ namespace SharpAvi.Sample
         private void StartRecording()
         {
             if (IsRecording)
+            {
                 throw new InvalidOperationException("Already recording.");
+            }
 
-            if (minimizeOnStart)
+            if (_minimizeOnStart)
+            {
                 WindowState = WindowState.Minimized;
+            }
 
             Elapsed = "00:00";
             HasLastScreencast = false;
             IsRecording = true;
 
-            recordingStopwatch.Reset();
-            recordingTimer.Start();
+            _recordingStopwatch.Reset();
+            _recordingTimer.Start();
 
-            lastFileName = System.IO.Path.Combine(outputFolder, DateTime.Now.ToString("yyyy-MM-dd-HH-mm-ss") + ".avi");
-            var bitRate = Mp3AudioEncoderLame.SupportedBitRates.OrderBy(br => br).ElementAt(audioQuality);
-            recorder = new Recorder(lastFileName, 
-                encoder, encodingQuality, 
-                audioSourceIndex, audioWaveFormat, encodeAudio, bitRate);
+            _lastFileName = System.IO.Path.Combine(_outputFolder, DateTime.Now.ToString("yyyy-MM-dd-HH-mm-ss") + ".avi");
+            var bitRate = Mp3AudioEncoderLame.SupportedBitRates.OrderBy(br => br).ElementAt(_audioQuality);
+            _recorder = new Recorder(_lastFileName, 
+                _encoder, _encodingQuality, 
+                _audioSourceIndex, _audioWaveFormat, _encodeAudio, bitRate);
 
-            recordingStopwatch.Start();
+            _recordingStopwatch.Start();
         }
 
         private void StopRecording()
         {
             if (!IsRecording)
+            {
                 throw new InvalidOperationException("Not recording.");
+            }
 
             try
             {
-                if (recorder != null)
+                if (_recorder == null)
                 {
-                    recorder.Dispose();
-                    recorder = null;
+                    return;
                 }
+
+                _recorder.Dispose();
+                _recorder = null;
             }
             finally
             {
-                recordingTimer.Stop();
-                recordingStopwatch.Stop();
+                _recordingTimer.Stop();
+                _recordingStopwatch.Stop();
 
                 IsRecording = false;
                 HasLastScreencast = true;
@@ -116,41 +123,37 @@ namespace SharpAvi.Sample
 
         private void recordingTimer_Tick(object sender, EventArgs e)
         {
-            var elapsed = recordingStopwatch.Elapsed;
-            Elapsed = string.Format(
-                "{0:00}:{1:00}", 
-                Math.Floor(elapsed.TotalMinutes), 
-                elapsed.Seconds);
+            var elapsed = _recordingStopwatch.Elapsed;
+            Elapsed = $"{Math.Floor(elapsed.TotalMinutes):00}:{elapsed.Seconds:00}";
         }
 
         #endregion
 
-
         #region Settings
 
-        private string outputFolder;
-        private FourCC encoder;
-        private int encodingQuality;
-        private int audioSourceIndex;
-        private SupportedWaveFormat audioWaveFormat;
-        private bool encodeAudio;
-        private int audioQuality;
-        private bool minimizeOnStart;
+        private string _outputFolder;
+        private FourCC _encoder;
+        private int _encodingQuality;
+        private int _audioSourceIndex;
+        private SupportedWaveFormat _audioWaveFormat;
+        private bool _encodeAudio;
+        private int _audioQuality;
+        private bool _minimizeOnStart;
 
         private void InitDefaultSettings()
         {
             var exePath = new Uri(System.Reflection.Assembly.GetEntryAssembly().Location).LocalPath;
-            outputFolder = System.IO.Path.GetDirectoryName(exePath);
+            _outputFolder = System.IO.Path.GetDirectoryName(exePath);
 
-            encoder = KnownFourCCs.Codecs.MotionJpeg;
-            encodingQuality = 70;
+            _encoder = KnownFourCCs.Codecs.MotionJpeg;
+            _encodingQuality = 70;
 
-            audioSourceIndex = -1;
-            audioWaveFormat = SupportedWaveFormat.WAVE_FORMAT_44M16;
-            encodeAudio = true;
-            audioQuality = (Mp3AudioEncoderLame.SupportedBitRates.Length + 1) / 2;
+            _audioSourceIndex = -1;
+            _audioWaveFormat = SupportedWaveFormat.WAVE_FORMAT_44M16;
+            _encodeAudio = true;
+            _audioQuality = (Mp3AudioEncoderLame.SupportedBitRates.Length + 1) / 2;
 
-            minimizeOnStart = true;
+            _minimizeOnStart = true;
         }
 
         private void ShowSettingsDialog()
@@ -158,27 +161,29 @@ namespace SharpAvi.Sample
             var dlg = new SettingsWindow()
             {
                 Owner = this,
-                Folder = outputFolder,
-                Encoder = encoder,
-                Quality = encodingQuality,
-                SelectedAudioSourceIndex = audioSourceIndex,
-                AudioWaveFormat = audioWaveFormat,
-                EncodeAudio = encodeAudio,
-                AudioQuality = audioQuality,
-                MinimizeOnStart = minimizeOnStart
+                Folder = _outputFolder,
+                Encoder = _encoder,
+                Quality = _encodingQuality,
+                SelectedAudioSourceIndex = _audioSourceIndex,
+                AudioWaveFormat = _audioWaveFormat,
+                EncodeAudio = _encodeAudio,
+                AudioQuality = _audioQuality,
+                MinimizeOnStart = _minimizeOnStart
             };
-            
-            if (dlg.ShowDialog() == true)
+
+            if (dlg.ShowDialog() != true)
             {
-                outputFolder = dlg.Folder;
-                encoder = dlg.Encoder;
-                encodingQuality = dlg.Quality;
-                audioSourceIndex = dlg.SelectedAudioSourceIndex;
-                audioWaveFormat = dlg.AudioWaveFormat;
-                encodeAudio = dlg.EncodeAudio;
-                audioQuality = dlg.AudioQuality;
-                minimizeOnStart = dlg.MinimizeOnStart;
+                return;
             }
+
+            _outputFolder = dlg.Folder;
+            _encoder = dlg.Encoder;
+            _encodingQuality = dlg.Quality;
+            _audioSourceIndex = dlg.SelectedAudioSourceIndex;
+            _audioWaveFormat = dlg.AudioWaveFormat;
+            _encodeAudio = dlg.EncodeAudio;
+            _audioQuality = dlg.AudioQuality;
+            _minimizeOnStart = dlg.MinimizeOnStart;
         }
 
         #endregion
@@ -192,7 +197,7 @@ namespace SharpAvi.Sample
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Error starting recording\r\n" + ex.ToString());
+                MessageBox.Show("Error starting recording\r\n" + ex);
                 StopRecording();
             }
         }
@@ -205,13 +210,13 @@ namespace SharpAvi.Sample
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Error stopping recording\r\n" + ex.ToString());
+                MessageBox.Show("Error stopping recording\r\n" + ex);
             }
         }
 
         private void GoToLastScreencast_Click(object sender, RoutedEventArgs e)
         {
-            Process.Start("explorer.exe", string.Format("/select, \"{0}\"", lastFileName));
+            Process.Start("explorer.exe", $"/select, \"{_lastFileName}\"");
         }
 
         private void Settings_Click(object sender, RoutedEventArgs e)
@@ -222,7 +227,9 @@ namespace SharpAvi.Sample
         private void Exit_Click(object sender, RoutedEventArgs e)
         {
             if (IsRecording)
+            {
                 StopRecording();
+            }
 
             Close();
         }

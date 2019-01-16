@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics.Contracts;
-using System.Linq;
-using System.Text;
-using SharpAvi.Output;
 
 namespace SharpAvi.Codecs
 {
@@ -117,10 +113,7 @@ namespace SharpAvi.Codecs
                 }
             }
 
-            public short Format
-            {
-                get { throw new NotImplementedException(); }
-            }
+            public short Format => throw new NotImplementedException();
 
             public int BytesPerSecond
             {
@@ -140,10 +133,7 @@ namespace SharpAvi.Codecs
                 }
             }
 
-            public byte[] FormatSpecificData
-            {
-                get { throw new NotImplementedException(); }
-            }
+            public byte[] FormatSpecificData => throw new NotImplementedException();
 
             public int GetMaxEncodedLength(int sourceCount)
             {

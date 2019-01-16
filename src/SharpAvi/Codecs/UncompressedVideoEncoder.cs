@@ -11,9 +11,9 @@ namespace SharpAvi.Codecs
     /// </remarks>
     public class UncompressedVideoEncoder : IVideoEncoder
     {
-        private readonly int width;
-        private readonly int height;
-        private readonly byte[] sourceBuffer;
+        private readonly int _width;
+        private readonly int _height;
+        private readonly byte[] _sourceBuffer;
 
         /// <summary>
         /// Creates a new instance of <see cref="UncompressedVideoEncoder"/>.
@@ -25,34 +25,25 @@ namespace SharpAvi.Codecs
             Contract.Requires(width > 0);
             Contract.Requires(height > 0);
 
-            this.width = width;
-            this.height = height;
-            sourceBuffer = new byte[width * height * 4];
+            _width = width;
+            _height = height;
+            _sourceBuffer = new byte[width * height * 4];
         }
 
         #region IVideoEncoder Members
 
         /// <summary>Video codec.</summary>
-        public FourCC Codec
-        {
-            get { return KnownFourCCs.Codecs.Uncompressed; }
-        }
+        public FourCC Codec => KnownFourCCs.Codecs.Uncompressed;
 
         /// <summary>
         /// Number of bits per pixel in encoded image.
         /// </summary>
-        public BitsPerPixel BitsPerPixel
-        {
-            get { return BitsPerPixel.Bpp24; }
-        }
+        public BitsPerPixel BitsPerPixel => BitsPerPixel.Bpp24;
 
         /// <summary>
         /// Maximum size of encoded frame.
         /// </summary>
-        public int MaxEncodedSize
-        {
-            get { return width * height * 3; }
-        }
+        public int MaxEncodedSize => _width * _height * 3;
 
         /// <summary>
         /// Encodes a frame.
@@ -60,8 +51,8 @@ namespace SharpAvi.Codecs
         /// <seealso cref="IVideoEncoder.EncodeFrame"/>
         public int EncodeFrame(byte[] source, int srcOffset, byte[] destination, int destOffset, out bool isKeyFrame)
         {
-            BitmapUtils.FlipVertical(source, srcOffset, sourceBuffer, 0, height, width * 4);
-            BitmapUtils.Bgr32ToBgr24(sourceBuffer, 0, destination, destOffset, width * height);
+            BitmapUtils.FlipVertical(source, srcOffset, _sourceBuffer, 0, _height, _width * 4);
+            BitmapUtils.Bgr32ToBgr24(_sourceBuffer, 0, destination, destOffset, _width * _height);
             isKeyFrame = true;
             return MaxEncodedSize;
         }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if NET471
+using System;
 using System.Diagnostics.Contracts;
 using System.Reflection;
 using System.Threading;
@@ -21,9 +22,9 @@ namespace SharpAvi.Codecs
     /// </remarks>
     public class SingleThreadedVideoEncoderWrapper : IVideoEncoder, IDisposable
     {
-        private readonly IVideoEncoder encoder;
-        private readonly Thread thread;
-        private readonly Dispatcher dispatcher;
+        private readonly IVideoEncoder _encoder;
+        private readonly Thread _thread;
+        private readonly Dispatcher _dispatcher;
 
         /// <summary>
         /// Creates a new instance of <see cref="SingleThreadedVideoEncoderWrapper"/>.
@@ -36,20 +37,22 @@ namespace SharpAvi.Codecs
         {
             Contract.Requires(encoderFactory != null);
 
-            this.thread = new Thread(RunDispatcher)
+            _thread = new Thread(RunDispatcher)
             {
                 IsBackground = true,
                 Name = typeof(SingleThreadedVideoEncoderWrapper).Name
             };
+            // TODO: Make sure this is disposed
             var dispatcherCreated = new AutoResetEvent(false);
-            thread.Start(dispatcherCreated);
+            _thread.Start(dispatcherCreated);
             dispatcherCreated.WaitOne();
-            this.dispatcher = Dispatcher.FromThread(thread);
-
+            _dispatcher = Dispatcher.FromThread(_thread);
             // TODO: Create encoder on the first frame
-            this.encoder = DispatcherInvokeAndPropagateException(encoderFactory);
-            if (encoder == null)
+            _encoder = DispatcherInvokeAndPropagateException(encoderFactory);
+            if (_encoder == null)
+            {
                 throw new InvalidOperationException("Encoder factory has created no instance.");
+            }
         }
 
         /// <summary>
@@ -57,17 +60,18 @@ namespace SharpAvi.Codecs
         /// </summary>
         public void Dispose()
         {
-            if (thread.IsAlive)
+            if (!_thread.IsAlive)
             {
-                var encoderDisposable = encoder as IDisposable;
-                if (encoderDisposable != null)
-                {
-                    DispatcherInvokeAndPropagateException(encoderDisposable.Dispose);
-                }
-
-                dispatcher.InvokeShutdown();
-                thread.Join();
+                return;
             }
+
+            if (_encoder is IDisposable encoderDisposable)
+            {
+                DispatcherInvokeAndPropagateException(encoderDisposable.Dispose);
+            }
+
+            _dispatcher.InvokeShutdown();
+            _thread.Join();
         }
 
         /// <summary>Codec ID.</summary>
@@ -75,7 +79,7 @@ namespace SharpAvi.Codecs
         {
             get
             {
-                return DispatcherInvokeAndPropagateException(() => encoder.Codec);
+                return DispatcherInvokeAndPropagateException(() => _encoder.Codec);
             }
         }
 
@@ -86,7 +90,7 @@ namespace SharpAvi.Codecs
         {
             get
             {
-                return DispatcherInvokeAndPropagateException(() => encoder.BitsPerPixel);
+                return DispatcherInvokeAndPropagateException(() => _encoder.BitsPerPixel);
             }
         }
 
@@ -97,7 +101,7 @@ namespace SharpAvi.Codecs
         {
             get
             {
-                return DispatcherInvokeAndPropagateException(() => encoder.MaxEncodedSize);
+                return DispatcherInvokeAndPropagateException(() => _encoder.MaxEncodedSize);
             }
         }
 
@@ -114,8 +118,7 @@ namespace SharpAvi.Codecs
 
         private EncodeResult EncodeFrame(byte[] source, int srcOffset, byte[] destination, int destOffset)
         {
-            bool isKeyFrame;
-            var result = encoder.EncodeFrame(source, srcOffset, destination, destOffset, out isKeyFrame);
+            var result = _encoder.EncodeFrame(source, srcOffset, destination, destOffset, out var isKeyFrame);
             return new EncodeResult
             {
                 EncodedLength = result,
@@ -133,7 +136,7 @@ namespace SharpAvi.Codecs
         private void DispatcherInvokeAndPropagateException(Action action)
         {
             Exception exOnDispatcherThread = null;
-            dispatcher.Invoke(new Action(() =>
+            _dispatcher.Invoke(() =>
             {
                 try
                 {
@@ -143,7 +146,7 @@ namespace SharpAvi.Codecs
                 {
                     exOnDispatcherThread = ex;
                 }
-            }));
+            });
 
             if (exOnDispatcherThread != null)
             {
@@ -154,7 +157,7 @@ namespace SharpAvi.Codecs
         private TResult DispatcherInvokeAndPropagateException<TResult>(Func<TResult> func)
         {
             Exception exOnDispatcherThread = null;
-            var result = (TResult)dispatcher.Invoke(new Func<TResult>(() =>
+            var result = _dispatcher.Invoke(() =>
             {
                 try
                 {
@@ -163,9 +166,9 @@ namespace SharpAvi.Codecs
                 catch (Exception ex)
                 {
                     exOnDispatcherThread = ex;
-                    return default(TResult);
+                    return default;
                 }
-            }));
+            });
 
             if (exOnDispatcherThread != null)
             {
@@ -183,10 +186,11 @@ namespace SharpAvi.Codecs
         private void RunDispatcher(object parameter)
         {
             AutoResetEvent dispatcherCreated = (AutoResetEvent)parameter;
-            var dispatcher = Dispatcher.CurrentDispatcher;
+            _ = Dispatcher.CurrentDispatcher;
             dispatcherCreated.Set();
 
             Dispatcher.Run();
         }
     }
 }
+#endif

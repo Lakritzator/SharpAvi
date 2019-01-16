@@ -32,20 +32,15 @@ namespace SharpAvi.Codecs
         /// <summary>
         /// Default preferred order of the supported codecs.
         /// </summary>
-        public static ReadOnlyCollection<FourCC> DefaultCodecPreference
-        {
-            get { return defaultCodecPreference; }
-        }
-        private static readonly ReadOnlyCollection<FourCC> defaultCodecPreference =
-            new ReadOnlyCollection<FourCC>(
-                new[]
-                {
-                    KnownFourCCs.Codecs.MicrosoftMpeg4V3,
-                    KnownFourCCs.Codecs.MicrosoftMpeg4V2,
-                    KnownFourCCs.Codecs.Xvid,
-                    KnownFourCCs.Codecs.X264,
-                    KnownFourCCs.Codecs.DivX,
-                });
+        public static ReadOnlyCollection<FourCC> DefaultCodecPreference { get; } = new ReadOnlyCollection<FourCC>(
+            new[]
+            {
+                KnownFourCCs.Codecs.MicrosoftMpeg4V3,
+                KnownFourCCs.Codecs.MicrosoftMpeg4V2,
+                KnownFourCCs.Codecs.Xvid,
+                KnownFourCCs.Codecs.X264,
+                KnownFourCCs.Codecs.DivX,
+            });
 
         /// <summary>
         /// Gets info about the supported codecs that are installed on the system.
@@ -55,18 +50,19 @@ namespace SharpAvi.Codecs
             var result = new List<CodecInfo>();
 
             var inBitmapInfo = CreateBitmapInfo(8, 8, 32, KnownFourCCs.Codecs.Uncompressed);
-            inBitmapInfo.ImageSize = (uint)4;
+            inBitmapInfo.ImageSize = 4;
 
             foreach (var codec in DefaultCodecPreference)
             {
                 var outBitmapInfo = CreateBitmapInfo(8, 8, 24, codec);
-                VfwApi.CompressorInfo compressorInfo;
-                var compressorHandle = GetCompressor(inBitmapInfo, outBitmapInfo, out compressorInfo);
-                if (compressorHandle != IntPtr.Zero)
+                var compressorHandle = GetCompressor(inBitmapInfo, outBitmapInfo, out var compressorInfo);
+                if (compressorHandle == IntPtr.Zero)
                 {
-                    VfwApi.ICClose(compressorHandle);
-                    result.Add(new CodecInfo(codec, compressorInfo.Description));
+                    continue;
                 }
+
+                VfwApi.ICClose(compressorHandle);
+                result.Add(new CodecInfo(codec, compressorInfo.Description));
             }
 
             return result.ToArray();
@@ -106,29 +102,29 @@ namespace SharpAvi.Codecs
                 SizeOfStruct = (uint)Marshal.SizeOf(typeof(VfwApi.BitmapInfoHeader)),
                 Width = width,
                 Height = height,
-                BitCount = (ushort)bitCount,
+                BitCount = bitCount,
                 Planes = 1,
                 Compression = (uint)codec,
             };
         }
 
 
-        private readonly int width;
-        private readonly int height;
-        private readonly byte[] sourceBuffer;
-        private readonly VfwApi.BitmapInfoHeader inBitmapInfo;
-        private readonly VfwApi.BitmapInfoHeader outBitmapInfo;
-        private readonly IntPtr compressorHandle;
-        private readonly VfwApi.CompressorInfo compressorInfo;
-        private readonly int maxEncodedSize;
-        private readonly int quality;
-        private readonly int keyFrameRate;
+        private readonly int _width;
+        private readonly int _height;
+        private readonly byte[] _sourceBuffer;
+        private readonly VfwApi.BitmapInfoHeader _inBitmapInfo;
+        private readonly VfwApi.BitmapInfoHeader _outBitmapInfo;
+        private readonly IntPtr _compressorHandle;
+        private readonly VfwApi.CompressorInfo _compressorInfo;
+        private readonly int _maxEncodedSize;
+        private readonly int _quality;
+        private readonly int _keyFrameRate;
 
 
-        private int frameIndex = 0;
-        private int framesFromLastKey;
-        private bool isDisposed;
-        private bool needEnd;
+        private int _frameIndex;
+        private int _framesFromLastKey;
+        private bool _isDisposed;
+        private bool _needEnd;
 
         /// <summary>
         /// Creates a new instance of <see cref="Mpeg4VideoEncoderVcm"/>.
@@ -169,12 +165,12 @@ namespace SharpAvi.Codecs
             Contract.Requires(frameCount >= 0);
             Contract.Requires(1 <= quality && quality <= 100);
 
-            this.width = width;
-            this.height = height;
-            sourceBuffer = new byte[width * height * 4];
+            _width = width;
+            _height = height;
+            _sourceBuffer = new byte[width * height * 4];
 
-            inBitmapInfo = CreateBitmapInfo(width, height, 32, KnownFourCCs.Codecs.Uncompressed);
-            inBitmapInfo.ImageSize = (uint)sourceBuffer.Length;
+            _inBitmapInfo = CreateBitmapInfo(width, height, 32, KnownFourCCs.Codecs.Uncompressed);
+            _inBitmapInfo.ImageSize = (uint)_sourceBuffer.Length;
 
             if (codecPreference == null || codecPreference.Length == 0)
             {
@@ -182,28 +178,30 @@ namespace SharpAvi.Codecs
             }
             foreach (var codec in codecPreference)
             {
-                outBitmapInfo = CreateBitmapInfo(width, height, 24, codec);
-                compressorHandle = GetCompressor(inBitmapInfo, outBitmapInfo, out compressorInfo);
-                if (compressorHandle != IntPtr.Zero)
+                _outBitmapInfo = CreateBitmapInfo(width, height, 24, codec);
+                _compressorHandle = GetCompressor(_inBitmapInfo, _outBitmapInfo, out _compressorInfo);
+                if (_compressorHandle != IntPtr.Zero)
+                {
                     break;
+                }
             }
 
-            if (compressorHandle == IntPtr.Zero)
+            if (_compressorHandle == IntPtr.Zero)
             {
                 throw new InvalidOperationException("No compatible MPEG-4 encoder found.");
             }
 
             try
             {
-                maxEncodedSize = GetMaxEncodedSize();
+                _maxEncodedSize = GetMaxEncodedSize();
 
                 // quality for ICM ranges from 0 to 10000
-                this.quality = compressorInfo.SupportsQuality ? quality * 100 : 0;
+                _quality = _compressorInfo.SupportsQuality ? quality * 100 : 0;
 
                 // typical key frame rate ranges from FPS to 2*FPS
-                keyFrameRate = (int)Math.Round((2 - 0.01 * quality) * fps);
+                _keyFrameRate = (int)Math.Round((2 - 0.01 * quality) * fps);
 
-                if (compressorInfo.RequestsCompressFrames)
+                if (_compressorInfo.RequestsCompressFrames)
                 {
                     InitCompressFramesInfo(fps, frameCount);
                 }
@@ -227,9 +225,9 @@ namespace SharpAvi.Codecs
 
         private int GetMaxEncodedSize()
         {
-            var inHeader = inBitmapInfo;
-            var outHeader = outBitmapInfo;
-            return VfwApi.ICSendMessage(compressorHandle, VfwApi.ICM_COMPRESS_GET_SIZE, ref inHeader, ref outHeader);
+            var inHeader = _inBitmapInfo;
+            var outHeader = _outBitmapInfo;
+            return VfwApi.ICSendMessage(_compressorHandle, VfwApi.ICM_COMPRESS_GET_SIZE, ref inHeader, ref outHeader);
         }
 
         private void InitCompressFramesInfo(double fps, int frameCount)
@@ -238,29 +236,29 @@ namespace SharpAvi.Codecs
             {
                 StartFrame = 0,
                 FrameCount = frameCount,
-                Quality = quality,
-                KeyRate = keyFrameRate,
+                Quality = _quality,
+                KeyRate = _keyFrameRate,
             };
             AviUtils.SplitFrameRate((decimal)fps, out info.FrameRateNumerator, out info.FrameRateDenominator);
 
-            var result = VfwApi.ICSendMessage(compressorHandle, VfwApi.ICM_COMPRESS_FRAMES_INFO, ref info, Marshal.SizeOf(typeof(VfwApi.CompressFramesInfo)));
+            var result = VfwApi.ICSendMessage(_compressorHandle, VfwApi.ICM_COMPRESS_FRAMES_INFO, ref info, Marshal.SizeOf(typeof(VfwApi.CompressFramesInfo)));
             CheckICResult(result);
         }
 
         private void StartCompression()
         {
-            var inHeader = inBitmapInfo;
-            var outHeader = outBitmapInfo;
-            var result = VfwApi.ICSendMessage(compressorHandle, VfwApi.ICM_COMPRESS_BEGIN, ref inHeader, ref outHeader);
+            var inHeader = _inBitmapInfo;
+            var outHeader = _outBitmapInfo;
+            var result = VfwApi.ICSendMessage(_compressorHandle, VfwApi.ICM_COMPRESS_BEGIN, ref inHeader, ref outHeader);
             CheckICResult(result);
 
-            needEnd = true;
-            framesFromLastKey = keyFrameRate;
+            _needEnd = true;
+            _framesFromLastKey = _keyFrameRate;
         }
 
         private void EndCompression()
         {
-            var result = VfwApi.ICSendMessage(compressorHandle, VfwApi.ICM_COMPRESS_END, IntPtr.Zero, IntPtr.Zero);
+            var result = VfwApi.ICSendMessage(_compressorHandle, VfwApi.ICM_COMPRESS_END, IntPtr.Zero, IntPtr.Zero);
             CheckICResult(result);
         }
 
@@ -268,61 +266,50 @@ namespace SharpAvi.Codecs
         #region IVideoEncoder Members
 
         /// <summary>Video codec.</summary>
-        public FourCC Codec
-        {
-            get { return outBitmapInfo.Compression; }
-        }
+        public FourCC Codec => _outBitmapInfo.Compression;
 
         /// <summary>Number of bits per pixel in the encoded image.</summary>
-        public BitsPerPixel BitsPerPixel
-        {
-            get { return BitsPerPixel.Bpp24; }
-        }
+        public BitsPerPixel BitsPerPixel => BitsPerPixel.Bpp24;
 
         /// <summary>
         /// Maximum size of the encoded frame.
         /// </summary>
-        public int MaxEncodedSize
-        {
-            get { return maxEncodedSize; }
-        }
+        public int MaxEncodedSize => _maxEncodedSize;
 
         /// <summary>Encodes a frame.</summary>
         /// <seealso cref="IVideoEncoder.EncodeFrame"/>
         public int EncodeFrame(byte[] source, int srcOffset, byte[] destination, int destOffset, out bool isKeyFrame)
         {
             // TODO: Introduce Width and Height in IVideoRecorder and add Requires to EncodeFrame contract
-            Contract.Assert(srcOffset + 4 * width * height <= source.Length);
+            Contract.Assert(srcOffset + 4 * _width * _height <= source.Length);
 
-            BitmapUtils.FlipVertical(source, srcOffset, sourceBuffer, 0, height, width * 4);
+            BitmapUtils.FlipVertical(source, srcOffset, _sourceBuffer, 0, _height, _width * 4);
 
-            var sourceHandle = GCHandle.Alloc(sourceBuffer, GCHandleType.Pinned);
+            var sourceHandle = GCHandle.Alloc(_sourceBuffer, GCHandleType.Pinned);
             var encodedHandle = GCHandle.Alloc(destination, GCHandleType.Pinned);
             try
             {
-                var outInfo = outBitmapInfo;
+                var outInfo = _outBitmapInfo;
                 outInfo.ImageSize = (uint)destination.Length;
-                var inInfo = inBitmapInfo;
-                int outFlags;
-                int chunkID;
-                var flags = framesFromLastKey >= keyFrameRate ? VfwApi.ICCOMPRESS_KEYFRAME : 0;
+                var inInfo = _inBitmapInfo;
+                var flags = _framesFromLastKey >= _keyFrameRate ? VfwApi.ICCOMPRESS_KEYFRAME : 0;
 
-                var result = VfwApi.ICCompress(compressorHandle, flags,
+                var result = VfwApi.ICCompress(_compressorHandle, flags,
                     ref outInfo, encodedHandle.AddrOfPinnedObject(), ref inInfo, sourceHandle.AddrOfPinnedObject(),
-                    out chunkID, out outFlags, frameIndex,
-                    0, quality, IntPtr.Zero, IntPtr.Zero);
+                    out _, out var outFlags, _frameIndex,
+                    0, _quality, IntPtr.Zero, IntPtr.Zero);
                 CheckICResult(result);
-                frameIndex++;
+                _frameIndex++;
 
 
                 isKeyFrame = (outFlags & VfwApi.AVIIF_KEYFRAME) == VfwApi.AVIIF_KEYFRAME;
                 if (isKeyFrame)
                 {
-                    framesFromLastKey = 1;
+                    _framesFromLastKey = 1;
                 }
                 else
                 {
-                    framesFromLastKey++;
+                    _framesFromLastKey++;
                 }
 
                 return (int)outInfo.ImageSize;
@@ -344,17 +331,23 @@ namespace SharpAvi.Codecs
         /// </summary>
         public void Dispose()
         {
-            if (!isDisposed)
+            if (_isDisposed)
             {
-                if (needEnd)
-                    EndCompression();
-
-                if (compressorHandle != IntPtr.Zero)
-                    VfwApi.ICClose(compressorHandle);
-
-                isDisposed = true;
-                GC.SuppressFinalize(this);
+                return;
             }
+
+            if (_needEnd)
+            {
+                EndCompression();
+            }
+
+            if (_compressorHandle != IntPtr.Zero)
+            {
+                VfwApi.ICClose(_compressorHandle);
+            }
+
+            _isDisposed = true;
+            GC.SuppressFinalize(this);
         }
 
         #endregion
@@ -362,14 +355,16 @@ namespace SharpAvi.Codecs
 
         private void CheckICResult(int result)
         {
-            if (result != VfwApi.ICERR_OK)
+            if (result == VfwApi.ICERR_OK)
             {
-                var errorDesc = VfwApi.GetErrorDescription(result);
-                var resultStr = errorDesc == null
-                    ? result.ToString()
-                    : string.Format("{0} ({1})", result, errorDesc);
-                throw new InvalidOperationException(string.Format("Encoder operation returned an error: {0}.", resultStr));
+                return;
             }
+
+            var errorDesc = VfwApi.GetErrorDescription(result);
+            var resultStr = errorDesc == null
+                ? result.ToString()
+                : $"{result} ({errorDesc})";
+            throw new InvalidOperationException($"Encoder operation returned an error: {resultStr}.");
         }
     }
 }

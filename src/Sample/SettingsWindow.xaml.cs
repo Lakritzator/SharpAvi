@@ -32,21 +32,25 @@ namespace SharpAvi.Sample
 
         private void InitAvailableCodecs()
         {
-            var codecs = new List<CodecInfo>();
-            codecs.Add(new CodecInfo(KnownFourCCs.Codecs.Uncompressed, "(none)"));
-            codecs.Add(new CodecInfo(KnownFourCCs.Codecs.MotionJpeg, "Motion JPEG"));
+            var codecs = new List<CodecInfo>
+            {
+                new CodecInfo(KnownFourCCs.Codecs.Uncompressed, "(none)"),
+                new CodecInfo(KnownFourCCs.Codecs.MotionJpeg, "Motion JPEG")
+            };
             codecs.AddRange(Mpeg4VideoEncoderVcm.GetAvailableCodecs());
             AvailableCodecs = codecs;
         }
 
         private void InitAvailableAudioSources()
         {
-            var deviceList = new Dictionary<int, string>();
-            deviceList.Add(-1, "(no sound)");
+            var deviceList = new Dictionary<int, string>
+            {
+                {-1, "(no sound)"}
+            };
             for (var i = 0; i < WaveInEvent.DeviceCount; i++)
             {
                 var caps = WaveInEvent.GetCapabilities(i);
-                if (audioFormats.All(caps.SupportsWaveFormat))
+                if (_audioFormats.All(caps.SupportsWaveFormat))
                 {
                     deviceList.Add(i, caps.ProductName);
                 }
@@ -107,11 +111,11 @@ namespace SharpAvi.Sample
             // TODO: Make wave format more adjustable
             get 
             {
-                return UseStereo ? audioFormats[1] : audioFormats[0]; 
+                return UseStereo ? _audioFormats[1] : _audioFormats[0]; 
             }
             set
             {
-                UseStereo = (value == audioFormats[1]);
+                UseStereo = (value == _audioFormats[1]);
             }
         }
 
@@ -155,26 +159,16 @@ namespace SharpAvi.Sample
             private set;
         }
 
-        public IEnumerable<SupportedWaveFormat> AvailableAudioWaveFormats
-        {
-            get { return audioFormats; }
-        }
-        private readonly SupportedWaveFormat[] audioFormats = new[] 
-        { 
+        public IEnumerable<SupportedWaveFormat> AvailableAudioWaveFormats => _audioFormats;
+
+        private readonly SupportedWaveFormat[] _audioFormats = { 
             SupportedWaveFormat.WAVE_FORMAT_44M16, 
             SupportedWaveFormat.WAVE_FORMAT_44S16 
         };
 
-        public int MaximumAudioQuality
-        {
-            get { return Mp3AudioEncoderLame.SupportedBitRates.Length - 1; }
-        }
+        public int MaximumAudioQuality => Mp3AudioEncoderLame.SupportedBitRates.Length - 1;
 
-        public bool Is64BitProcess
-        {
-            get { return IntPtr.Size == 8; }
-        }
-
+        public bool Is64BitProcess => IntPtr.Size == 8;
 
         private void OK_Click(object sender, RoutedEventArgs e)
         {
@@ -196,9 +190,6 @@ namespace SharpAvi.Sample
             }
         }
 
-        IntPtr System.Windows.Forms.IWin32Window.Handle
-        {
-            get { return new WindowInteropHelper(this).Handle; }
-        }
+        IntPtr System.Windows.Forms.IWin32Window.Handle => new WindowInteropHelper(this).Handle;
     }
 }

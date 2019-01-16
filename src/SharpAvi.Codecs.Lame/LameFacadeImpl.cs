@@ -3,15 +3,15 @@ using System.Runtime.InteropServices;
 
 namespace SharpAvi.Codecs.Lame
 {
-    public class LameFacadeImpl : Mp3AudioEncoderLame.ILameFacade, IDisposable
+    public class LameFacadeImpl : ILameFacade, IDisposable
     {
-        private readonly IntPtr context;
-        private bool closed;
+        private readonly IntPtr _context;
+        private bool _closed;
 
         public LameFacadeImpl()
         {
-            context = lame_init();
-            CheckResult(context != IntPtr.Zero, "lame_init");
+            _context = lame_init();
+            CheckResult(_context != IntPtr.Zero, "lame_init");
         }
 
         ~LameFacadeImpl()
@@ -21,46 +21,39 @@ namespace SharpAvi.Codecs.Lame
 
         public void Dispose()
         {
-            if (!closed)
+            if (_closed)
             {
-                lame_close(context);
-                closed = true;
+                return;
             }
+
+            lame_close(_context);
+            _closed = true;
         }
 
 
         public int ChannelCount
         {
-            get { return lame_get_num_channels(context); }
-            set { lame_set_num_channels(context, value); }
+            get { return lame_get_num_channels(_context); }
+            set { lame_set_num_channels(_context, value); }
         }
 
         public int InputSampleRate
         {
-            get { return lame_get_in_samplerate(context); }
-            set { lame_set_in_samplerate(context, value); }
+            get { return lame_get_in_samplerate(_context); }
+            set { lame_set_in_samplerate(_context, value); }
         }
 
         public int OutputBitRate
         {
-            get { return lame_get_brate(context); }
-            set { lame_set_brate(context, value); }
+            get { return lame_get_brate(_context); }
+            set { lame_set_brate(_context, value); }
         }
 
-        public int OutputSampleRate
-        {
-            get { return lame_get_out_samplerate(context); }
-        }
+        public int OutputSampleRate => lame_get_out_samplerate(_context);
 
-        public int FrameSize
-        {
-            get { return lame_get_framesize(context); }
-        }
+        public int FrameSize => lame_get_framesize(_context);
 
-        public int EncoderDelay
-        {
-            get { return lame_get_encoder_delay(context); }
-        }
+        public int EncoderDelay => lame_get_encoder_delay(_context);
 
         public void PrepareEncoding()
         {
@@ -68,10 +61,10 @@ namespace SharpAvi.Codecs.Lame
             switch (ChannelCount)
             {
                 case 1:
-                    lame_set_mode(context, MpegMode.Mono);
+                    lame_set_mode(_context, MpegMode.Mono);
                     break;
                 case 2:
-                    lame_set_mode(context, MpegMode.Stereo);
+                    lame_set_mode(_context, MpegMode.Stereo);
                     break;
                 default:
                     ThrowInvalidChannelCount();
@@ -79,17 +72,17 @@ namespace SharpAvi.Codecs.Lame
             }
 
             // Disable VBR
-            lame_set_VBR(context, VbrMode.Off);
+            lame_set_VBR(_context, VbrMode.Off);
 
             // Prevent output of redundant headers
-            lame_set_write_id3tag_automatic(context, false);
-            lame_set_bWriteVbrTag(context, 0);
+            lame_set_write_id3tag_automatic(_context, false);
+            lame_set_bWriteVbrTag(_context, 0);
 
             // Ensure not decoding
-            lame_set_decode_only(context, 0);
+            lame_set_decode_only(_context, 0);
 
             // Finally, initialize encoding process
-            int result = lame_init_params(context);
+            int result = lame_init_params(_context);
             CheckResult(result == 0, "lame_init_params");
         }
 
@@ -106,10 +99,10 @@ namespace SharpAvi.Codecs.Lame
                 switch (ChannelCount)
                 {
                     case 1:
-                        result = lame_encode_buffer(context, sourcePtr, sourcePtr, sampleCount, destPtr, outputSize);
+                        result = lame_encode_buffer(_context, sourcePtr, sourcePtr, sampleCount, destPtr, outputSize);
                         break;
                     case 2:
-                        result = lame_encode_buffer_interleaved(context, sourcePtr, sampleCount / 2, destPtr, outputSize);
+                        result = lame_encode_buffer_interleaved(_context, sourcePtr, sampleCount / 2, destPtr, outputSize);
                         break;
                     default:
                         ThrowInvalidChannelCount();
@@ -133,7 +126,7 @@ namespace SharpAvi.Codecs.Lame
             {
                 IntPtr destPtr = new IntPtr(destHandle.AddrOfPinnedObject().ToInt64() + destIndex);
                 int destLength = dest.Length - destIndex;
-                int result = lame_encode_flush(context, destPtr, destLength);
+                int result = lame_encode_flush(_context, destPtr, destLength);
                 CheckResult(result >= 0, "lame_encode_flush");
                 return result;
             }
@@ -148,7 +141,7 @@ namespace SharpAvi.Codecs.Lame
         {
             if (!passCondition)
             {
-                throw new ExternalException(string.Format("{0} failed", routineName));
+                throw new ExternalException($"{routineName} failed");
             }
         }
 
@@ -180,7 +173,7 @@ namespace SharpAvi.Codecs.Lame
         [DllImport(DLL_NAME, CallingConvention = CallingConvention.Cdecl)]
         private static extern int lame_get_num_channels(IntPtr context);
 
-        private enum MpegMode : int
+        private enum MpegMode
         {
             Stereo = 0,
             JointStereo = 1,
@@ -219,7 +212,7 @@ namespace SharpAvi.Codecs.Lame
         [DllImport(DLL_NAME, CallingConvention = CallingConvention.Cdecl)]
         private static extern int lame_get_bWriteVbrTag(IntPtr context);
 
-        private enum VbrMode : int
+        private enum VbrMode
         {
             Off = 0,
             MarkTaylor = 1,
@@ -251,16 +244,16 @@ namespace SharpAvi.Codecs.Lame
 
         [DllImport(DLL_NAME, CallingConvention = CallingConvention.Cdecl)]
         private static extern int lame_encode_buffer(IntPtr context, 
-            IntPtr buffer_l, IntPtr buffer_r, int nsamples,
-            IntPtr mp3buf, int mp3buf_size);
+            IntPtr bufferL, IntPtr bufferR, int nSamples,
+            IntPtr mp3Buf, int mp3BufSize);
 
         [DllImport(DLL_NAME, CallingConvention = CallingConvention.Cdecl)]
         private static extern int lame_encode_buffer_interleaved(IntPtr context,
-            IntPtr buffer, int nsamples,
-            IntPtr mp3buf, int mp3buf_size);
+            IntPtr buffer, int nSamples,
+            IntPtr mp3Buf, int mp3BufSize);
 
         [DllImport(DLL_NAME, CallingConvention = CallingConvention.Cdecl)]
-        private static extern int lame_encode_flush(IntPtr context, IntPtr mp3buf, int mp3buf_size);
+        private static extern int lame_encode_flush(IntPtr context, IntPtr mp3Buf, int mp3BufSize);
 
         #endregion
     }
