@@ -59,8 +59,9 @@ namespace SharpAvi.Codecs.Lame
         private static bool IsLibraryLoaded(string libraryName)
         {
             var process = Process.GetCurrentProcess();
-            return process.Modules.Cast<ProcessModule>().
-                Any(m => string.Compare(m.ModuleName, libraryName, StringComparison.InvariantCultureIgnoreCase) == 0);
+            return process.Modules
+                .Cast<ProcessModule>()
+                .Any(m => string.Compare(m.ModuleName, libraryName, StringComparison.InvariantCultureIgnoreCase) == 0);
         }
 
         [DllImport("kernel32.dll", CallingConvention = CallingConvention.Winapi, CharSet = CharSet.Auto)]

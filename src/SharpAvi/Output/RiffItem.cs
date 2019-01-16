@@ -7,50 +7,38 @@ namespace SharpAvi.Output
     /// </summary>
     internal struct RiffItem
     {
-        public const int ITEM_HEADER_SIZE = 2 * sizeof(uint);
+        public const int ItemHeaderSize = 2 * sizeof(uint);
 
-        private readonly long dataStart;
-        private int dataSize;
+        private readonly long _dataStart;
+        private int _dataSize;
 
         public RiffItem(long dataStart, int dataSize = -1)
         {
-            Contract.Requires(dataStart >= ITEM_HEADER_SIZE);
-            Contract.Requires(dataSize <= int.MaxValue - ITEM_HEADER_SIZE);
+            Contract.Requires(dataStart >= ItemHeaderSize);
+            Contract.Requires(dataSize <= int.MaxValue - ItemHeaderSize);
 
-            this.dataStart = dataStart;
-            this.dataSize = dataSize;
+            _dataStart = dataStart;
+            _dataSize = dataSize;
         }
 
-        public long DataStart
-        {
-            get { return dataStart; }
-        }
+        public long DataStart => _dataStart;
 
-        public long ItemStart
-        {
-            get { return dataStart - ITEM_HEADER_SIZE; }
-        }
+        public long ItemStart => _dataStart - ItemHeaderSize;
 
-        public long DataSizeStart
-        {
-            get { return dataStart - sizeof(uint); }
-        }
+        public long DataSizeStart => _dataStart - sizeof(uint);
 
         public int DataSize
         {
-            get { return dataSize; }
+            get { return _dataSize; }
             set
             {
                 Contract.Requires(value >= 0);
                 Contract.Requires(DataSize < 0);
 
-                dataSize = value;
+                _dataSize = value;
             }
         }
 
-        public int ItemSize
-        {
-            get { return dataSize < 0 ? -1 : dataSize + ITEM_HEADER_SIZE; }
-        }
+        public int ItemSize => _dataSize < 0 ? -1 : _dataSize + ItemHeaderSize;
     }
 }

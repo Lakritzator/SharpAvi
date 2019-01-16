@@ -8,7 +8,7 @@ namespace SharpAvi.Output
     /// </summary>
     internal class AsyncVideoStreamWrapper : VideoStreamWrapperBase
     {
-        private readonly SequentialInvoker writeInvoker = new SequentialInvoker();
+        private readonly SequentialInvoker _writeInvoker = new SequentialInvoker();
 
         public AsyncVideoStreamWrapper(IAviVideoStreamInternal baseStream)
             : base(baseStream)
@@ -18,19 +18,19 @@ namespace SharpAvi.Output
 
         public override void WriteFrame(bool isKeyFrame, byte[] frameData, int startIndex, int length)
         {
-            writeInvoker.Invoke(() => base.WriteFrame(isKeyFrame, frameData, startIndex, length));
+            _writeInvoker.Invoke(() => base.WriteFrame(isKeyFrame, frameData, startIndex, length));
         }
 
         public override Task WriteFrameAsync(bool isKeyFrame, byte[] frameData, int startIndex, int length)
         {
-            return writeInvoker.InvokeAsync(() => base.WriteFrame(isKeyFrame, frameData, startIndex, length));
+            return _writeInvoker.InvokeAsync(() => base.WriteFrame(isKeyFrame, frameData, startIndex, length));
         }
 
         public override void FinishWriting()
         {
             // Perform all pending writes and then let the base stream to finish
             // (possibly writing some more data synchronously)
-            writeInvoker.WaitForPendingInvocations();
+            _writeInvoker.WaitForPendingInvocations();
 
             base.FinishWriting();
         }

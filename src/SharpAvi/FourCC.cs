@@ -79,9 +79,9 @@ namespace SharpAvi
         /// </summary>
         public override bool Equals(object obj)
         {
-            if (obj is FourCC)
+            if (obj is FourCC cc)
             {
-                return (FourCC)obj == this;
+                return cc == this;
             }
 
             return base.Equals(obj);

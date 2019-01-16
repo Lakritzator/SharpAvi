@@ -10,27 +10,25 @@ namespace SharpAvi.Output
     /// </summary>
     internal class EncodingAudioStreamWrapper : AudioStreamWrapperBase
     {
-        private readonly IAudioEncoder encoder;
-        private readonly bool ownsEncoder;
-        private byte[] encodedBuffer;
-        private readonly object syncBuffer = new object();
+        private readonly IAudioEncoder _encoder;
+        private readonly bool _ownsEncoder;
+        private byte[] _encodedBuffer;
+        private readonly object _syncBuffer = new object();
 
-        public EncodingAudioStreamWrapper(IAviAudioStreamInternal baseStream, IAudioEncoder encoder, bool ownsEncoder)
-            : base(baseStream)
+        public EncodingAudioStreamWrapper(IAviAudioStreamInternal baseStream, IAudioEncoder encoder, bool ownsEncoder) : base(baseStream)
         {
             Contract.Requires(baseStream != null);
             Contract.Requires(encoder != null);
 
-            this.encoder = encoder;
-            this.ownsEncoder = ownsEncoder;
+            _encoder = encoder;
+            _ownsEncoder = ownsEncoder;
         }
 
         public override void Dispose()
         {
-            if (ownsEncoder)
+            if (_ownsEncoder)
             {
-                var encoderDisposable = encoder as IDisposable;
-                if (encoderDisposable != null)
+                if (_encoder is IDisposable encoderDisposable)
                 {
                     encoderDisposable.Dispose();
                 }
@@ -44,7 +42,7 @@ namespace SharpAvi.Output
         /// </summary>
         public override int ChannelCount
         {
-            get { return encoder.ChannelCount; }
+            get { return _encoder.ChannelCount; }
             set { ThrowPropertyDefinedByEncoder(); }
         }
 
@@ -53,7 +51,7 @@ namespace SharpAvi.Output
         /// </summary>
         public override int SamplesPerSecond
         {
-            get { return encoder.SamplesPerSecond; }
+            get { return _encoder.SamplesPerSecond; }
             set { ThrowPropertyDefinedByEncoder(); }
         }
 
@@ -62,7 +60,7 @@ namespace SharpAvi.Output
         /// </summary>
         public override int BitsPerSample
         {
-            get { return encoder.BitsPerSample; }
+            get { return _encoder.BitsPerSample; }
             set { ThrowPropertyDefinedByEncoder(); }
         }
 
@@ -71,7 +69,7 @@ namespace SharpAvi.Output
         /// </summary>
         public override short Format
         {
-            get { return encoder.Format; }
+            get { return _encoder.Format; }
             set { ThrowPropertyDefinedByEncoder(); }
         }
 
@@ -80,7 +78,7 @@ namespace SharpAvi.Output
         /// </summary>
         public override int BytesPerSecond
         {
-            get { return encoder.BytesPerSecond; }
+            get { return _encoder.BytesPerSecond; }
             set { ThrowPropertyDefinedByEncoder(); }
         }
 
@@ -89,7 +87,7 @@ namespace SharpAvi.Output
         /// </summary>
         public override int Granularity
         {
-            get { return encoder.Granularity; }
+            get { return _encoder.Granularity; }
             set { ThrowPropertyDefinedByEncoder(); }
         }
 
@@ -98,7 +96,7 @@ namespace SharpAvi.Output
         /// </summary>
         public override byte[] FormatSpecificData
         {
-            get { return encoder.FormatSpecificData; }
+            get { return _encoder.FormatSpecificData; }
             set { ThrowPropertyDefinedByEncoder(); }
         }
 
@@ -108,13 +106,13 @@ namespace SharpAvi.Output
         public override void WriteBlock(byte[] data, int startIndex, int length)
         {
             // Prevent accessing encoded buffer by multiple threads simultaneously
-            lock (syncBuffer)
+            lock (_syncBuffer)
             {
                 EnsureBufferIsSufficient(length);
-                var encodedLength = encoder.EncodeBlock(data, startIndex, length, encodedBuffer, 0);
+                var encodedLength = _encoder.EncodeBlock(data, startIndex, length, _encodedBuffer, 0);
                 if (encodedLength > 0)
                 {
-                    base.WriteBlock(encodedBuffer, 0, encodedLength);
+                    base.WriteBlock(_encodedBuffer, 0, encodedLength);
                 }
             }
         }
@@ -141,14 +139,14 @@ namespace SharpAvi.Output
         public override void FinishWriting()
         {
             // Prevent accessing encoded buffer by multiple threads simultaneously
-            lock (syncBuffer)
+            lock (_syncBuffer)
             {
                 // Flush the encoder
                 EnsureBufferIsSufficient(0);
-                var encodedLength = encoder.Flush(encodedBuffer, 0);
+                var encodedLength = _encoder.Flush(_encodedBuffer, 0);
                 if (encodedLength > 0)
                 {
-                    base.WriteBlock(encodedBuffer, 0, encodedLength);
+                    base.WriteBlock(_encodedBuffer, 0, encodedLength);
                 }
             }
 
@@ -158,19 +156,19 @@ namespace SharpAvi.Output
 
         private void EnsureBufferIsSufficient(int sourceCount)
         {
-            var maxLength = encoder.GetMaxEncodedLength(sourceCount);
-            if (encodedBuffer != null && encodedBuffer.Length >= maxLength)
+            var maxLength = _encoder.GetMaxEncodedLength(sourceCount);
+            if (_encodedBuffer != null && _encodedBuffer.Length >= maxLength)
             {
                 return;
             }
 
-            var newLength = encodedBuffer == null ? 1024 : encodedBuffer.Length * 2;
+            var newLength = _encodedBuffer?.Length * 2 ?? 1024;
             while (newLength < maxLength)
             {
                 newLength *= 2;
             }
 
-            encodedBuffer = new byte[newLength];
+            _encodedBuffer = new byte[newLength];
         }
 
         private void ThrowPropertyDefinedByEncoder()

@@ -16,19 +16,15 @@ namespace SharpAvi.Output
         {
             Contract.Requires(baseStream != null);
 
-            this.baseStream = baseStream;
+            _baseStream = baseStream;
         }
 
-        protected IAviAudioStreamInternal BaseStream
-        {
-            get { return baseStream; }
-        }
-        private readonly IAviAudioStreamInternal baseStream;
+        protected IAviAudioStreamInternal BaseStream => _baseStream;
+        private readonly IAviAudioStreamInternal _baseStream;
 
         public virtual void Dispose()
         {
-            var baseStreamDisposable = baseStream as IDisposable;
-            if (baseStreamDisposable != null)
+            if (_baseStream is IDisposable baseStreamDisposable)
             {
                 baseStreamDisposable.Dispose();
             }
@@ -36,100 +32,88 @@ namespace SharpAvi.Output
 
         public virtual int ChannelCount
         {
-            get { return baseStream.ChannelCount; }
-            set { baseStream.ChannelCount = value; }
+            get { return _baseStream.ChannelCount; }
+            set { _baseStream.ChannelCount = value; }
         }
 
         public virtual int SamplesPerSecond
         {
-            get { return baseStream.SamplesPerSecond; }
-            set { baseStream.SamplesPerSecond = value; }
+            get { return _baseStream.SamplesPerSecond; }
+            set { _baseStream.SamplesPerSecond = value; }
         }
 
         public virtual int BitsPerSample
         {
-            get { return baseStream.BitsPerSample; }
-            set { baseStream.BitsPerSample = value; }
+            get { return _baseStream.BitsPerSample; }
+            set { _baseStream.BitsPerSample = value; }
         }
 
         public virtual short Format
         {
-            get { return baseStream.Format; }
-            set { baseStream.Format = value; }
+            get { return _baseStream.Format; }
+            set { _baseStream.Format = value; }
         }
 
         public virtual int BytesPerSecond
         {
-            get { return baseStream.BytesPerSecond; }
-            set { baseStream.BytesPerSecond = value; }
+            get { return _baseStream.BytesPerSecond; }
+            set { _baseStream.BytesPerSecond = value; }
         }
 
         public virtual int Granularity
         {
-            get { return baseStream.Granularity; }
-            set { baseStream.Granularity = value; }
+            get { return _baseStream.Granularity; }
+            set { _baseStream.Granularity = value; }
         }
 
         public virtual byte[] FormatSpecificData
         {
-            get { return baseStream.FormatSpecificData; }
-            set { baseStream.FormatSpecificData = value; }
+            get { return _baseStream.FormatSpecificData; }
+            set { _baseStream.FormatSpecificData = value; }
         }
 
         public virtual void WriteBlock(byte[] data, int startIndex, int length)
         {
-            baseStream.WriteBlock(data, startIndex, length);
+            _baseStream.WriteBlock(data, startIndex, length);
         }
 
         public virtual Task WriteBlockAsync(byte[] data, int startIndex, int length)
         {
-            return baseStream.WriteBlockAsync(data, startIndex, length);
+            return _baseStream.WriteBlockAsync(data, startIndex, length);
         }
 
-        public int BlocksWritten
-        {
-            get { return baseStream.BlocksWritten; }
-        }
+        public int BlocksWritten => _baseStream.BlocksWritten;
 
-        public int Index
-        {
-            get { return baseStream.Index; }
-        }
+        public int Index => _baseStream.Index;
 
         public virtual string Name
         {
-            get { return baseStream.Name; }
-            set { baseStream.Name = value; }
+            get { return _baseStream.Name; }
+            set { _baseStream.Name = value; }
         }
 
-        public FourCC StreamType
-        {
-            get { return baseStream.StreamType; }
-        }
+        public FourCC StreamType => _baseStream.StreamType;
 
-        public FourCC ChunkId
-        {
-            get { return baseStream.ChunkId; }
-        }
+        public FourCC ChunkId => _baseStream.ChunkId;
 
         public virtual void PrepareForWriting()
         {
-            baseStream.PrepareForWriting();
+            _baseStream.PrepareForWriting();
         }
 
         public virtual void FinishWriting()
         {
-            baseStream.FinishWriting();
+            _baseStream.FinishWriting();
         }
 
         public void WriteHeader()
         {
-            baseStream.WriteHeader();
+            _baseStream.WriteHeader();
         }
 
         public void WriteFormat()
         {
-            baseStream.WriteFormat();
+            _baseStream.WriteFormat();
         }
     }
 }

@@ -9,7 +9,7 @@ namespace SharpAvi.Output
         public static RiffItem OpenChunk(this BinaryWriter writer, FourCC fourCc, int expectedDataSize = -1)
         {
             Contract.Requires(writer != null);
-            Contract.Requires(expectedDataSize <= int.MaxValue - RiffItem.ITEM_HEADER_SIZE);
+            Contract.Requires(expectedDataSize <= int.MaxValue - RiffItem.ItemHeaderSize);
 
             writer.Write((uint)fourCc);
             writer.Write((uint)(expectedDataSize >= 0 ? expectedDataSize : 0));
@@ -38,7 +38,7 @@ namespace SharpAvi.Output
             var position = writer.BaseStream.Position;
 
             var dataSize = position - item.DataStart;
-            if (dataSize > int.MaxValue - RiffItem.ITEM_HEADER_SIZE)
+            if (dataSize > int.MaxValue - RiffItem.ItemHeaderSize)
             {
                 throw new InvalidOperationException("Item size is too big.");
             }

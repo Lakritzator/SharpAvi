@@ -19,6 +19,6 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
     <ItemGroup>
-    <ProjectReference Include="..\SharpAvi\SharpAvi.csproj"/>
+    <ProjectReference Include="..\SharpAvi\SharpAvi.csproj" />
   </ItemGroup>
 </Project>

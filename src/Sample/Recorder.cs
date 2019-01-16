@@ -28,9 +28,7 @@ namespace SharpAvi.Sample
         private readonly AutoResetEvent _videoFrameWritten = new AutoResetEvent(false);
         private readonly AutoResetEvent _audioBlockWritten = new AutoResetEvent(false);
 
-        public Recorder(string fileName, 
-            FourCC codec, int quality, 
-            int audioSourceIndex, SupportedWaveFormat audioWaveFormat, bool encodeAudio, int audioBitRate)
+        public Recorder(string fileName, FourCC codec, int quality, int audioSourceIndex, SupportedWaveFormat audioWaveFormat, bool encodeAudio, int audioBitRate)
         {
             System.Windows.Media.Matrix toDevice;
             using (var source = new HwndSource(new HwndSourceParameters()))
@@ -71,7 +69,7 @@ namespace SharpAvi.Sample
                     BufferMilliseconds = (int)Math.Ceiling(1000 / _writer.FramesPerSecond),
                     NumberOfBuffers = 3,
                 };
-                _audioSource.DataAvailable += audioSource_DataAvailable;
+                _audioSource.DataAvailable += AudioSource_DataAvailable;
             }
 
             _screenThread = new Thread(RecordScreen)
@@ -147,13 +145,16 @@ namespace SharpAvi.Sample
             if (_audioSource != null)
             {
                 _audioSource.StopRecording();
-                _audioSource.DataAvailable -= audioSource_DataAvailable;
+                _audioSource.DataAvailable -= AudioSource_DataAvailable;
             }
 
             // Close writer: the remaining data is written to a file and file is closed
             _writer.Close();
 
             _stopThread.Close();
+
+            _audioBlockWritten.Dispose();
+            _audioBlockWritten.Dispose();
         }
 
         private void RecordScreen()
@@ -225,7 +226,7 @@ namespace SharpAvi.Sample
             }
         }
 
-        private void audioSource_DataAvailable(object sender, WaveInEventArgs e)
+        private void AudioSource_DataAvailable(object sender, WaveInEventArgs e)
         {
             var signaled = WaitHandle.WaitAny(new WaitHandle[] { _videoFrameWritten, _stopThread });
             if (signaled != 0)

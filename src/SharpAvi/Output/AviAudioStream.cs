@@ -5,111 +5,108 @@ namespace SharpAvi.Output
 {
     internal class AviAudioStream : AviStreamBase, IAviAudioStreamInternal
     {
-        private readonly IAviStreamWriteHandler writeHandler;
-        private int channelCount = 1;
-        private int samplesPerSecond = 44100;
-        private int bitsPerSample = 8;
-        private short format = AudioFormats.Unknown;
-        private int bytesPerSecond = 44100;
-        private int granularity = 1;
-        private byte[] formatData;
-        private int blocksWritten;
+        private readonly IAviStreamWriteHandler _writeHandler;
+        private int _channelCount;
+        private int _samplesPerSecond;
+        private int _bitsPerSample;
+        private short _format;
+        private int _bytesPerSecond;
+        private int _granularity;
+        private byte[] _formatData;
+        private int _blocksWritten;
 
-
-        public AviAudioStream(int index, IAviStreamWriteHandler writeHandler, 
-            int channelCount, int samplesPerSecond, int bitsPerSample)
-            : base(index)
+        public AviAudioStream(int index, IAviStreamWriteHandler writeHandler, int channelCount, int samplesPerSecond, int bitsPerSample) : base(index)
         {
             Contract.Requires(index >= 0);
             Contract.Requires(writeHandler != null);
 
-            this.writeHandler = writeHandler;
+            _writeHandler = writeHandler;
 
-            this.format = AudioFormats.Pcm;
-            this.formatData = null;
+            _format = AudioFormats.Pcm;
+            _formatData = null;
 
-            this.channelCount = channelCount;
-            this.samplesPerSecond = samplesPerSecond;
-            this.bitsPerSample = bitsPerSample;
-            this.granularity = (bitsPerSample * channelCount + 7) / 8;
-            this.bytesPerSecond = granularity * samplesPerSecond;
+            _channelCount = channelCount;
+            _samplesPerSecond = samplesPerSecond;
+            _bitsPerSample = bitsPerSample;
+            _granularity = (bitsPerSample * channelCount + 7) / 8;
+            _bytesPerSecond = _granularity * samplesPerSecond;
         }
 
         
         public int ChannelCount
         {
-            get { return channelCount; }
+            get { return _channelCount; }
             set
             {
                 CheckNotFrozen();
-                channelCount = value;
+                _channelCount = value;
             }
         }
 
         public int SamplesPerSecond
         {
-            get { return samplesPerSecond; }
+            get { return _samplesPerSecond; }
             set
             {
                 CheckNotFrozen();
-                samplesPerSecond = value;
+                _samplesPerSecond = value;
             }
         }
 
         public int BitsPerSample
         {
-            get { return bitsPerSample; }
+            get { return _bitsPerSample; }
             set
             {
                 CheckNotFrozen();
-                bitsPerSample = value;
+                _bitsPerSample = value;
             }
         }
 
         public short Format
         {
-            get { return format; }
+            get { return _format; }
             set
             {
                 CheckNotFrozen();
-                format = value;
+                _format = value;
             }
         }
 
         public int BytesPerSecond 
         {
-            get { return bytesPerSecond; }
+            get { return _bytesPerSecond; }
             set
             {
                 CheckNotFrozen();
-                bytesPerSecond = value;
+                _bytesPerSecond = value;
             }
         }
 
         public int Granularity 
         {
-            get { return granularity; }
+            get { return _granularity; }
             set
             {
                 CheckNotFrozen();
-                granularity = value;
+                _granularity = value;
             }
         }
 
         public byte[] FormatSpecificData
         {
-            get { return formatData; }
+            get { return _formatData; }
             set
             {
                 CheckNotFrozen();
-                formatData = value;
+                _formatData = value;
             }
         }
 
         public void WriteBlock(byte[] buffer, int startIndex, int count)
         {
-            writeHandler.WriteAudioBlock(this, buffer, startIndex, count);
-            System.Threading.Interlocked.Increment(ref blocksWritten);
+            _writeHandler.WriteAudioBlock(this, buffer, startIndex, count);
+            System.Threading.Interlocked.Increment(ref _blocksWritten);
         }
 
         public System.Threading.Tasks.Task WriteBlockAsync(byte[] data, int startIndex, int length)
@@ -117,16 +114,10 @@ namespace SharpAvi.Output
             throw new NotSupportedException("Asynchronous writes are not supported.");
         }
 
-        public int BlocksWritten
-        {
-            get { return blocksWritten; }
-        }
+        public int BlocksWritten => _blocksWritten;
 
 
-        public override FourCC StreamType
-        {
-            get { return KnownFourCCs.StreamTypes.Audio; }
-        }
+        public override FourCC StreamType => KnownFourCCs.StreamTypes.Audio;
 
         protected override FourCC GenerateChunkId()
         {
@@ -135,12 +126,12 @@ namespace SharpAvi.Output
 
         public override void WriteHeader()
         {
-            writeHandler.WriteStreamHeader(this);
+            _writeHandler.WriteStreamHeader(this);
         }
 
         public override void WriteFormat()
         {
-            writeHandler.WriteStreamFormat(this);
+            _writeHandler.WriteStreamFormat(this);
         }
     }
 }

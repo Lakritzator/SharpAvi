@@ -9,10 +9,10 @@ namespace SharpAvi.Output
     /// </summary>
     internal class EncodingVideoStreamWrapper : VideoStreamWrapperBase
     {
-        private readonly IVideoEncoder encoder;
-        private readonly bool ownsEncoder;
-        private readonly byte[] encodedBuffer;
-        private readonly object syncBuffer = new object();
+        private readonly IVideoEncoder _encoder;
+        private readonly bool _ownsEncoder;
+        private readonly byte[] _encodedBuffer;
+        private readonly object _syncBuffer = new object();
 
         /// <summary>
         /// Creates a new instance of <see cref="EncodingVideoStreamWrapper"/>.
@@ -26,17 +26,16 @@ namespace SharpAvi.Output
             Contract.Requires(baseStream != null);
             Contract.Requires(encoder != null);
 
-            this.encoder = encoder;
-            this.ownsEncoder = ownsEncoder;
-            encodedBuffer = new byte[encoder.MaxEncodedSize];
+            _encoder = encoder;
+            _ownsEncoder = ownsEncoder;
+            _encodedBuffer = new byte[encoder.MaxEncodedSize];
         }
 
         public override void Dispose()
         {
-            if (ownsEncoder)
+            if (_ownsEncoder)
             {
-                var encoderDisposable = encoder as IDisposable;
-                if (encoderDisposable != null)
+                if (_encoder is IDisposable encoderDisposable)
                 {
                     encoderDisposable.Dispose();
                 }
@@ -49,7 +48,7 @@ namespace SharpAvi.Output
         /// <summary> Video codec. </summary>
         public override FourCC Codec
         {
-            get { return encoder.Codec; }
+            get { return _encoder.Codec; }
             set
             {
                 ThrowPropertyDefinedByEncoder();
@@ -59,7 +58,7 @@ namespace SharpAvi.Output
         /// <summary> Bits per pixel. </summary>
         public override BitsPerPixel BitsPerPixel
         {
-            get { return encoder.BitsPerPixel; }
+            get { return _encoder.BitsPerPixel; }
             set
             {
                 ThrowPropertyDefinedByEncoder();
@@ -70,10 +69,10 @@ namespace SharpAvi.Output
         public override void WriteFrame(bool isKeyFrame, byte[] frameData, int startIndex, int count)
         {
             // Prevent accessing encoded buffer by multiple threads simultaneously
-            lock (syncBuffer)
+            lock (_syncBuffer)
             {
-                count = encoder.EncodeFrame(frameData, startIndex, encodedBuffer, 0, out isKeyFrame);
-                base.WriteFrame(isKeyFrame, encodedBuffer, 0, count);
+                count = _encoder.EncodeFrame(frameData, startIndex, _encodedBuffer, 0, out isKeyFrame);
+                base.WriteFrame(isKeyFrame, _encodedBuffer, 0, count);
             }
         }
 
@@ -85,8 +84,8 @@ namespace SharpAvi.Output
         public override void PrepareForWriting()
         {
             // Set properties of the base stream
-            BaseStream.Codec = encoder.Codec;
-            BaseStream.BitsPerPixel = encoder.BitsPerPixel;
+            BaseStream.Codec = _encoder.Codec;
+            BaseStream.BitsPerPixel = _encoder.BitsPerPixel;
 
             base.PrepareForWriting();
         }

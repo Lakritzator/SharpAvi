@@ -5,30 +5,26 @@ namespace SharpAvi.Output
 {
     internal abstract class AviStreamBase : IAviStream, IAviStreamInternal
     {
-        private bool isFrozen;
-        private readonly int index;
-        private string name;
-        private FourCC chunkId;
+        private bool _isFrozen;
+        private string _name;
+        private FourCC _chunkId;
 
         protected AviStreamBase(int index)
         {
             Contract.Requires(index >= 0);
 
-            this.index = index;
+            Index = index;
         }
 
-        public int Index
-        {
-            get { return index; }
-        }
+        public int Index { get; private set; }
 
         public string Name
         {
-            get { return name; }
+            get { return _name; }
             set
             {
                 CheckNotFrozen();
-                name = value;
+                _name = value;
             }
         }
 
@@ -38,12 +34,12 @@ namespace SharpAvi.Output
         {
             get 
             { 
-                if (!isFrozen)
+                if (!_isFrozen)
                 {
                     throw new InvalidOperationException("Chunk ID is not defined until the stream is frozen.");
                 }
 
-                return chunkId; 
+                return _chunkId; 
             }
         }
 
@@ -59,12 +55,14 @@ namespace SharpAvi.Output
         /// </remarks>
         public virtual void PrepareForWriting()
         {
-            if (!isFrozen)
+            if (_isFrozen)
             {
-                isFrozen = true;
-
-                chunkId = GenerateChunkId();
+                return;
             }
+
+            _isFrozen = true;
+
+            _chunkId = GenerateChunkId();
         }
 
         /// <summary>
@@ -82,11 +80,10 @@ namespace SharpAvi.Output
 
         protected void CheckNotFrozen()
         {
-            if (isFrozen)
+            if (_isFrozen)
             {
                 throw new InvalidOperationException("No stream information can be changed after starting to write frames.");
             }
         }
-    
     }
 }
