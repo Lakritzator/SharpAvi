@@ -31,7 +31,7 @@ namespace SharpAvi.Codecs
     {
         private readonly Int32Rect rect;
         private readonly int quality;
-#if FX45
+#if NET471
         private readonly ThreadLocal<WriteableBitmap> bitmapHolder;
 #else
         private readonly WriteableBitmap bitmap;
@@ -55,7 +55,7 @@ namespace SharpAvi.Codecs
             rect = new Int32Rect(0, 0, width, height);
             this.quality = quality;
 
-#if FX45
+#if NET471
             bitmapHolder = new ThreadLocal<WriteableBitmap>(
                 () => new WriteableBitmap(rect.Width, rect.Height, 96, 96, PixelFormats.Bgr32, null),
                 false);
@@ -99,7 +99,7 @@ namespace SharpAvi.Codecs
         /// <seealso cref="IVideoEncoder.EncodeFrame"/>
         public int EncodeFrame(byte[] source, int srcOffset, byte[] destination, int destOffset, out bool isKeyFrame)
         {
-#if FX45
+#if NET471
             var bitmap = bitmapHolder.Value;
 #endif
             bitmap.WritePixels(rect, source, rect.Width * 4, srcOffset);

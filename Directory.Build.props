@@ -1,0 +1,65 @@
+﻿<Project>
+  <PropertyGroup>
+    <Copyright>Copyright © Vasili Maslov 2013-2018</Copyright>
+    <Authors>Vasili Maslov</Authors>
+    <RepositoryUrl>https://github.com/baSSiLL/SharpAvi</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageProjectUrl>https://github.com/baSSiLL/SharpAvi</PackageProjectUrl>
+    <PackageLicenseUrl>https://github.com/baSSiLL/SharpAvi/blob/master/LICENSE.md</PackageLicenseUrl>
+	<PackageDescription>If you want to render some video sequence, and do not want to touch DirectShow or depend on command-line utilities - SharpAvi may be what you need.
+
+Writing uncompressed AVI does not require any external dependencies, it's pure .NET code. Files are produced in compliance with the OpenDML extensions which allow (nearly) unlimited file size (no 2GB limit).
+
+Video is created by supplying individual in-memory bitmaps (byte arrays) and audio samples. Included are implementations of encoders for Motion JPEG (requires WPF), MPEG-4 (requires external VfW codecs) and MP3 (requires LAME binaries). Asynchronous writing/encoding is supported.</PackageDescription>
+	<Title>A simple library for creating video files in AVI format.</Title>
+	<PackageReleaseNotes>SingleThreadedVideoEncoderWrapper propagates errors from wrapped encoder onto a calling thread.</PackageReleaseNotes>
+	<PackageTags>AVI video authoring encoding OpenDML</PackageTags>
+    <LangVersion>latest</LangVersion>
+    <CopyLocalLockFileAssemblies Condition="'$(TargetFramework)' != 'net471'">true</CopyLocalLockFileAssemblies>
+    <Version>1.0.0</Version>
+    <AssemblyVersion>1.0.0</AssemblyVersion>
+    <FileVersion>1.0.0</FileVersion>
+    <AssemblySearchPaths Condition="'$(TargetFramework)' == 'net471'">{HintPathFromItem};{TargetFrameworkDirectory};{RawFileName};{GAC};</AssemblySearchPaths>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>false</UseWindowsForms>
+    <ExtrasEnableWpfProjectSetup>true</ExtrasEnableWpfProjectSetup>
+    <ExtrasEnableWinFormsProjectSetup>false</ExtrasEnableWinFormsProjectSetup>
+  </PropertyGroup>
+  
+  <PropertyGroup Condition="'$(Configuration)' != 'Debug' And !$(MSBuildProjectName.Contains('Test')) And !$(MSBuildProjectName.Contains('Demo'))">
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
+    <IsPackable>true</IsPackable>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="$(MSBuildProjectName.Contains('Tests')) Or $(MSBuildProjectName.Contains('Demo'))">
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>  
+
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugSymbols>True</DebugSymbols>
+    <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
+    <DebugType>Full</DebugType>
+    <Optimize>false</Optimize>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <DebugSymbols>True</DebugSymbols>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Nerdbank.GitVersioning" Version="2.3.38">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="PdbGit" Version="3.0.41">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+</Project>

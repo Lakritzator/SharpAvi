@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics.Contracts;
+using System.Threading.Tasks;
 
 namespace SharpAvi.Output
 {
@@ -62,23 +63,10 @@ namespace SharpAvi.Output
             baseStream.WriteFrame(isKeyFrame, frameData, startIndex, length);
         }
 
-#if FX45
-        public virtual System.Threading.Tasks.Task WriteFrameAsync(bool isKeyFrame, byte[] frameData, int startIndex, int length)
+        public virtual Task WriteFrameAsync(bool isKeyFrame, byte[] frameData, int startIndex, int length)
         {
             return baseStream.WriteFrameAsync(isKeyFrame, frameData, startIndex, length);
         }
-#else
-        public virtual IAsyncResult BeginWriteFrame(bool isKeyFrame, byte[] frameData, int startIndex, int length, 
-            AsyncCallback userCallback, object stateObject)
-        {
-            return baseStream.BeginWriteFrame(isKeyFrame, frameData, startIndex, length, userCallback, stateObject);
-        }
-
-        public virtual void EndWriteFrame(IAsyncResult asyncResult)
-        {
-            baseStream.EndWriteFrame(asyncResult);
-        }
-#endif
 
         public int FramesWritten
         {

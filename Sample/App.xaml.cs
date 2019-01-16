@@ -17,7 +17,7 @@ namespace SharpAvi.Sample
 
             // Set LAME DLL path for MP3 encoder
             var asmDir = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
-#if FX45
+#if NET471
             var is64BitProcess = Environment.Is64BitProcess;
 #else
             var is64BitProcess = IntPtr.Size * 8 == 64;

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Diagnostics.Contracts;
-using System.Linq;
 using SharpAvi.Output;
 
 namespace SharpAvi.Codecs
@@ -23,54 +22,6 @@ namespace SharpAvi.Codecs
             Contract.Ensures(Contract.Result<IAviVideoStream>() != null);
 
             var encoder = new UncompressedVideoEncoder(width, height);
-            return writer.AddEncodingVideoStream(encoder, true, width, height);
-        }
-
-#if FX45
-        /// <summary>
-        /// Adds new video stream with <see cref="MotionJpegVideoEncoderWpf"/>.
-        /// </summary>
-        /// <param name="writer">Writer object to which new stream is added.</param>
-        /// <param name="width">Frame width.</param>
-        /// <param name="height">Frame height.</param>
-        /// <param name="quality">Requested quality of compression.</param>
-        /// <seealso cref="AviWriter.AddEncodingVideoStream"/>
-        /// <seealso cref="MotionJpegVideoEncoderWpf"/>
-#else
-        /// <summary>
-        /// Adds new video stream with <see cref="MotionJpegVideoEncoderWpf"/>.
-        /// </summary>
-        /// <param name="writer">Writer object to which new stream is added.</param>
-        /// <param name="width">Frame width.</param>
-        /// <param name="height">Frame height.</param>
-        /// <param name="quality">Requested quality of compression.</param>
-        /// <param name="forceSingleThreadedAccess">
-        /// When <c>true</c>, the created <see cref="MotionJpegVideoEncoderWpf"/> instance is wrapped into
-        /// <see cref="SingleThreadedVideoEncoderWrapper"/>.
-        /// </param>
-        /// <seealso cref="AviWriter.AddEncodingVideoStream"/>
-        /// <seealso cref="MotionJpegVideoEncoderWpf"/>
-#endif
-        public static IAviVideoStream AddMotionJpegVideoStream(this AviWriter writer, int width, int height, int quality = 70
-#if !FX45
-            , bool forceSingleThreadedAccess = false
-#endif
-            )
-        {
-            Contract.Requires(writer != null);
-            Contract.Requires(width > 0);
-            Contract.Requires(height > 0);
-            Contract.Requires(1 <= quality && quality <= 100);
-            Contract.Ensures(Contract.Result<IAviVideoStream>() != null);
-
-#if FX45
-            var encoder = new MotionJpegVideoEncoderWpf(width, height, quality);
-#else
-            var encoderFactory = new Func<IVideoEncoder>(() => new MotionJpegVideoEncoderWpf(width, height, quality));
-            var encoder = forceSingleThreadedAccess
-                ? new SingleThreadedVideoEncoderWrapper(encoderFactory)
-                : encoderFactory.Invoke();
-#endif
             return writer.AddEncodingVideoStream(encoder, true, width, height);
         }
 
@@ -110,23 +61,6 @@ namespace SharpAvi.Codecs
                 ? new SingleThreadedVideoEncoderWrapper(encoderFactory)
                 : encoderFactory.Invoke();
             return writer.AddEncodingVideoStream(encoder, true, width, height);
-        }
-
-        /// <summary>
-        /// Adds new audio stream with <see cref="Mp3AudioEncoderLame"/>.
-        /// </summary>
-        /// <seealso cref="AviWriter.AddEncodingAudioStream"/>
-        /// <seealso cref="Mp3AudioEncoderLame"/>
-        public static IAviAudioStream AddMp3AudioStream(this AviWriter writer, int channelCount, int sampleRate, int outputBitRateKbps = 160)
-        {
-            Contract.Requires(writer != null);
-            Contract.Requires(channelCount == 1 || channelCount == 2);
-            Contract.Requires(sampleRate > 0);
-            Contract.Requires(Mp3AudioEncoderLame.SupportedBitRates.Contains(outputBitRateKbps));
-            Contract.Ensures(Contract.Result<IAviAudioStream>() != null);
-
-            var encoder = new Mp3AudioEncoderLame(channelCount, sampleRate, outputBitRateKbps);
-            return writer.AddEncodingAudioStream(encoder, true);
         }
     }
 }

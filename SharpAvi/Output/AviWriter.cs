@@ -23,7 +23,7 @@ namespace SharpAvi.Output
         private const int RIFF_AVIX_SIZE_TRESHOLD = int.MaxValue - 1024 * 1024;
 
         private readonly BinaryWriter fileWriter;
-#if !FX45
+#if !NET471
         private readonly bool closeWriter;
 #endif
         private bool isClosed = false;
@@ -38,16 +38,7 @@ namespace SharpAvi.Output
         private int riffAviFrameCount = -1;
         private int index1Count = 0;
 
-#if FX45
         private readonly List<IAviStreamInternal> streams = new List<IAviStreamInternal>();
-#else
-        private readonly List<IAviStream> streamsList = new List<IAviStream>();
-        private IEnumerable<IAviStreamInternal> streams
-        {
-            get { return streamsList.Cast<IAviStreamInternal>(); }
-        }
-        private readonly ReadOnlyCollection<IAviStream> streamsRO;
-#endif
         private StreamInfo[] streamsInfo;
 
         /// <summary>
@@ -57,10 +48,6 @@ namespace SharpAvi.Output
         public AviWriter(string fileName)
         {
             Contract.Requires(!string.IsNullOrEmpty(fileName));
-
-#if !FX45
-            streamsRO = new ReadOnlyCollection<IAviStream>(streamsList);
-#endif
 
             var fileStream = new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None, 1024 * 1024);
             fileWriter = new BinaryWriter(fileStream);
@@ -75,15 +62,7 @@ namespace SharpAvi.Output
         {
             Contract.Requires(stream.CanWrite);
             Contract.Requires(stream.CanSeek);
-
-#if FX45
             fileWriter = new BinaryWriter(stream, Encoding.Default, leaveOpen);
-#else
-            fileWriter = new BinaryWriter(stream);
-            closeWriter = !leaveOpen;
-            streamsRO = new ReadOnlyCollection<IAviStream>(streamsList);
-#endif
-
         }
 
         /// <summary>Frame rate.</summary>
@@ -132,17 +111,10 @@ namespace SharpAvi.Output
         private bool emitIndex1;
 
         /// <summary>AVI streams that have been added so far.</summary>
-#if FX45
         public IReadOnlyList<IAviStream> Streams
         {
             get { return streams; }
         }
-#else
-        public ReadOnlyCollection<IAviStream> Streams
-        {
-            get { return streamsRO; }
-        }
-#endif
 
         /// <summary>Adds new video stream.</summary>
         /// <param name="width">Frame's width.</param>
@@ -277,11 +249,7 @@ namespace SharpAvi.Output
                 CheckNotStartedWriting();
 
                 var stream = streamFactory.Invoke(Streams.Count);
-#if FX45
                 streams.Add(stream);
-#else
-                streamsList.Add(stream);
-#endif
                 return stream;
             }
         }
@@ -324,18 +292,7 @@ namespace SharpAvi.Output
                         WriteHeader();
                     }
 
-#if FX45
                     fileWriter.Close();
-#else
-                    if (closeWriter)
-                    {
-                        fileWriter.Close();
-                    }
-                    else
-                    {
-                        fileWriter.Flush();
-                    }
-#endif
                     isClosed = true;
                 }
 

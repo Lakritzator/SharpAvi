@@ -4,7 +4,7 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
 using System.Threading;
-#if FX45
+#if NET471
 using System.Threading.Tasks;
 #endif
 using System.Windows;
@@ -100,7 +100,7 @@ namespace SharpAvi.Sample
             else if (codec == KnownFourCCs.Codecs.MotionJpeg)
             {
                 return writer.AddMotionJpegVideoStream(screenWidth, screenHeight, quality
-#if !FX45
+#if !NET471
                     // Implementation of this encoder for .NET 3.5 requires single-threaded access
                     , forceSingleThreadedAccess: true
 #endif
@@ -169,7 +169,7 @@ namespace SharpAvi.Sample
         {
             var stopwatch = new Stopwatch();
             var buffer = new byte[screenWidth * screenHeight * 4];
-#if FX45
+#if NET471
             Task videoWriteTask = null;
 #else
             IAsyncResult videoWriteResult = null;
@@ -187,7 +187,7 @@ namespace SharpAvi.Sample
                 // Wait for the previous frame is written
                 if (!isFirstFrame)
                 {
-#if FX45
+#if NET471
                     videoWriteTask.Wait();
 #else
                     videoStream.EndWriteFrame(videoWriteResult);
@@ -203,7 +203,7 @@ namespace SharpAvi.Sample
                 }
 
                 // Start asynchronous (encoding and) writing of the new frame
-#if FX45
+#if NET471
                 videoWriteTask = videoStream.WriteFrameAsync(true, buffer, 0, buffer.Length);
 #else
                 videoWriteResult = videoStream.BeginWriteFrame(true, buffer, 0, buffer.Length, null, null);
@@ -221,7 +221,7 @@ namespace SharpAvi.Sample
             // Wait for the last frame is written
             if (!isFirstFrame)
             {
-#if FX45
+#if NET471
                 videoWriteTask.Wait();
 #else
                 videoStream.EndWriteFrame(videoWriteResult);

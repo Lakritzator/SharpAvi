@@ -1,11 +1,15 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2013
-VisualStudioVersion = 12.0.30723.0
+# Visual Studio 15
+VisualStudioVersion = 15.0.28307.271
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharpAvi", "SharpAvi\SharpAvi.csproj", "{07B83677-E9B8-4166-A383-CF3B3D393FBD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SharpAvi", "SharpAvi\SharpAvi.csproj", "{07B83677-E9B8-4166-A383-CF3B3D393FBD}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sample", "Sample\Sample.csproj", "{419ABA1F-198D-4E85-8BFB-58EE6FDAE67F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharpAvi.Codecs.MotionJpeg", "SharpAvi.Codecs.MotionJpeg\SharpAvi.Codecs.MotionJpeg.csproj", "{A4C2D595-1BAD-4233-92A0-3493803C3507}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharpAvi.Codecs.Lame", "SharpAvi.Codecs.Lame\SharpAvi.Codecs.Lame.csproj", "{348F9E10-28E3-48C8-BC75-CC650DB95B9B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,8 +25,19 @@ Global
 		{419ABA1F-198D-4E85-8BFB-58EE6FDAE67F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{419ABA1F-198D-4E85-8BFB-58EE6FDAE67F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{419ABA1F-198D-4E85-8BFB-58EE6FDAE67F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A4C2D595-1BAD-4233-92A0-3493803C3507}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A4C2D595-1BAD-4233-92A0-3493803C3507}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A4C2D595-1BAD-4233-92A0-3493803C3507}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A4C2D595-1BAD-4233-92A0-3493803C3507}.Release|Any CPU.Build.0 = Release|Any CPU
+		{348F9E10-28E3-48C8-BC75-CC650DB95B9B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{348F9E10-28E3-48C8-BC75-CC650DB95B9B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{348F9E10-28E3-48C8-BC75-CC650DB95B9B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{348F9E10-28E3-48C8-BC75-CC650DB95B9B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {988E4BAD-1AB0-42EA-98B3-4DFCDF4E88A7}
 	EndGlobalSection
 EndGlobal
