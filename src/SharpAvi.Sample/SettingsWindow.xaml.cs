@@ -13,7 +13,7 @@ namespace SharpAvi.Sample
     /// <summary>
     /// Interaction logic for SettingsWindow.xaml
     /// </summary>
-    public partial class SettingsWindow : Window, System.Windows.Forms.IWin32Window
+    public partial class SettingsWindow : System.Windows.Forms.IWin32Window
     {
         public SettingsWindow()
         {
@@ -119,9 +119,7 @@ namespace SharpAvi.Sample
             }
         }
 
-        public static readonly DependencyProperty EncodeAudioProperty =
-            DependencyProperty.Register("EncodeAudio", typeof(bool), typeof(SettingsWindow),
-                                        new PropertyMetadata(true));
+        public static readonly DependencyProperty EncodeAudioProperty = DependencyProperty.Register("EncodeAudio", typeof(bool), typeof(SettingsWindow), new PropertyMetadata(true));
 
         public bool EncodeAudio
         {

@@ -7,7 +7,7 @@ namespace SharpAvi.Codecs.Lame
     /// <summary>
     /// This is the implementation of the ILameFacade, which assumes that lame_enc.dll is already loaded!
     /// </summary>
-    public partial class LameFacadeImpl : ILameFacade, IDisposable
+    public class LameFacadeImpl : ILameFacade, IDisposable
     {
         // This is the name of the lame encoded dll, which needs to be on the path of loaded before via LoadLibrary with the same name. 
         private const string LameEncDllName = "lame_enc.dll";
