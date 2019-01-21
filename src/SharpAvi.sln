@@ -1,15 +1,15 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.28307.271
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.28407.52
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SharpAvi", "SharpAvi\SharpAvi.csproj", "{07B83677-E9B8-4166-A383-CF3B3D393FBD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sample", "Sample\Sample.csproj", "{419ABA1F-198D-4E85-8BFB-58EE6FDAE67F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SharpAvi.Sample", "SharpAvi.Sample\SharpAvi.Sample.csproj", "{419ABA1F-198D-4E85-8BFB-58EE6FDAE67F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharpAvi.Codecs.MotionJpeg", "SharpAvi.Codecs.MotionJpeg\SharpAvi.Codecs.MotionJpeg.csproj", "{A4C2D595-1BAD-4233-92A0-3493803C3507}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SharpAvi.Codecs.MotionJpeg", "SharpAvi.Codecs.MotionJpeg\SharpAvi.Codecs.MotionJpeg.csproj", "{A4C2D595-1BAD-4233-92A0-3493803C3507}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharpAvi.Codecs.Lame", "SharpAvi.Codecs.Lame\SharpAvi.Codecs.Lame.csproj", "{348F9E10-28E3-48C8-BC75-CC650DB95B9B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SharpAvi.Codecs.Lame", "SharpAvi.Codecs.Lame\SharpAvi.Codecs.Lame.csproj", "{348F9E10-28E3-48C8-BC75-CC650DB95B9B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

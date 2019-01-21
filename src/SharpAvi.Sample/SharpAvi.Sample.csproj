@@ -6,6 +6,7 @@
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
     <AssemblyTitle>SharpAvi.Sample</AssemblyTitle>
     <AssemblyName>SharpAvi.Sample</AssemblyName>
+    <RootNamespace>SharpAvi.Sample</RootNamespace>
   </PropertyGroup>
   
   <ItemGroup Condition="'$(TargetFramework)' != 'net471'">
