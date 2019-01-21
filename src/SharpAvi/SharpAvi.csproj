@@ -6,6 +6,15 @@
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
     <AssemblyTitle>SharpAvi</AssemblyTitle>
     <AssemblyName>SharpAvi</AssemblyName>
+	<Title>A simple library for creating video files in AVI format.</Title>
+	<PackageReleaseNotes>SingleThreadedVideoEncoderWrapper propagates errors from wrapped encoder onto a calling thread.</PackageReleaseNotes>
+	<PackageTags>AVI video authoring encoding OpenDML</PackageTags>
+	<PackageDescription>If you want to render some video sequence, and do not want to touch DirectShow or depend on command-line utilities - SharpAvi may be what you need.
+
+Writing uncompressed AVI does not require any external dependencies, it's pure .NET code. Files are produced in compliance with the OpenDML extensions which allow (nearly) unlimited file size (no 2GB limit).
+
+Video is created by supplying individual in-memory bitmaps (byte arrays) and audio samples. Included are implementations of encoders for Motion JPEG (requires WPF), MPEG-4 (requires external VfW codecs) and MP3 (requires LAME binaries). Asynchronous writing/encoding is supported.</PackageDescription>
+
   </PropertyGroup>
   
   <ItemGroup Condition="'$(TargetFramework)' != 'net471'">
