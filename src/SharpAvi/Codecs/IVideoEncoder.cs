@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics.Contracts;
+using SharpAvi.Enums;
 
 namespace SharpAvi.Codecs
 {
@@ -25,26 +26,16 @@ namespace SharpAvi.Codecs
         /// <summary>
         /// Encodes video frame.
         /// </summary>
-        /// <param name="source">
-        /// Frame bitmap data. The expected bitmap format is BGR32 top-to-bottom. Alpha component is not used.
+        /// <param name="source">Frame bitmap data. The expected bitmap format is BGR32 top-to-bottom. Alpha component is not used.</param>
+        /// <param name="srcOffset">Start offset of the frame data in the <paramref name="source"/>.
+        /// Expected length of the data is determined by the parameters specified when instantiating the encoder.
         /// </param>
-        /// <param name="srcOffset">
-        /// Start offset of the frame data in the <paramref name="source"/>.
-        /// Expected length of the data is determined by the parameters specified when instantinating the encoder.
-        /// </param>
-        /// <param name="destination">
-        /// Buffer for storing the encoded frame data.
-        /// </param>
-        /// <param name="destOffset">
-        /// Start offset of the encoded data in the <paramref name="destination"/> buffer.
+        /// <param name="destination">Buffer for storing the encoded frame data.</param>
+        /// <param name="destOffset">Start offset of the encoded data in the <paramref name="destination"/> buffer.
         /// There should be enough space till the end of the buffer, see <see cref="MaxEncodedSize"/>.
         /// </param>
-        /// <param name="isKeyFrame">
-        /// When the method returns, contains the value indicating whether this frame was encoded as a key frame.
-        /// </param>
-        /// <returns>
-        /// The actual number of bytes written to the <paramref name="destination"/> buffer.
-        /// </returns>
+        /// <param name="isKeyFrame">When the method returns, contains the value indicating whether this frame was encoded as a key frame.</param>
+        /// <returns>The actual number of bytes written to the <paramref name="destination"/> buffer.</returns>
         int EncodeFrame(byte[] source, int srcOffset, byte[] destination, int destOffset, out bool isKeyFrame);
     }
 

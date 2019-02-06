@@ -3,7 +3,7 @@ using System.Diagnostics.Contracts;
 
 namespace SharpAvi.Output
 {
-    internal abstract class AviStreamBase : IAviStream, IAviStreamInternal
+    internal abstract class AviStreamBase : IAviStreamInternal
     {
         private bool _isFrozen;
         private string _name;
@@ -20,7 +20,7 @@ namespace SharpAvi.Output
 
         public string Name
         {
-            get { return _name; }
+            get => _name;
             set
             {
                 CheckNotFrozen();

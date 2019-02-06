@@ -1,4 +1,4 @@
-﻿namespace SharpAvi
+﻿namespace SharpAvi.Enums
 {
     /// <summary>Number of bits per pixel.</summary>
     public enum BitsPerPixel

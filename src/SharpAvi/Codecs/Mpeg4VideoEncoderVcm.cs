@@ -4,6 +4,10 @@ using System.Collections.ObjectModel;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Runtime.InteropServices;
+using SharpAvi.Enums;
+using SharpAvi.Vfw;
+using SharpAvi.Vfw.Enums;
+using SharpAvi.Vfw.Structs;
 
 namespace SharpAvi.Codecs
 {
@@ -14,13 +18,11 @@ namespace SharpAvi.Codecs
     /// <para>
     /// Supported codecs include Microsoft MPEG-4 V3 and V2, Xvid, DivX and x264vfw.
     /// The codec to be used is selected from the ones installed on the system.
-    /// The encoder can be forced to use MPEG-4 codecs that are not explicitly supported. However, in this case
-    /// it is not guaranteed to work properly.
+    /// The encoder can be forced to use MPEG-4 codecs that are not explicitly supported. However, in this case it is not guaranteed to work properly.
     /// </para>
     /// <para>
     /// For <c>x264vfw</c> codec, it is recommended to enable <c>Zero Latency</c> option in its settings.
-    /// 64-bit support is limited, as there are no 64-bit versions of Microsoft and DivX codecs, 
-    /// and Xvid can produce some errors.
+    /// 64-bit support is limited, as there are no 64-bit versions of Microsoft and DivX codecs, and Xvid can produce some errors.
     /// </para>
     /// <para>
     /// In multi-threaded scenarios, like asynchronous encoding, it is recommended to wrap this encoder into
@@ -68,22 +70,22 @@ namespace SharpAvi.Codecs
             return result.ToArray();
         }
 
-        private static IntPtr GetCompressor(VfwApi.BitmapInfoHeader inBitmapInfo, VfwApi.BitmapInfoHeader outBitmapInfo, out VfwApi.CompressorInfo compressorInfo)
+        private static IntPtr GetCompressor(BitmapInfoHeader inBitmapInfo, BitmapInfoHeader outBitmapInfo, out CompressorInfo compressorInfo)
         {
             // Using ICLocate is time-consuming. Besides, it does not clean up something, so the process does not terminate on exit.
             // Instead open a specific codec and query it for needed features.
 
-            var compressorHandle = VfwApi.ICOpen((uint)KnownFourCCs.CodecTypes.Video, outBitmapInfo.Compression, VfwApi.ICMODE_COMPRESS);
+            var compressorHandle = VfwApi.ICOpen((uint)KnownFourCCs.CodecTypes.Video, outBitmapInfo.Compression, IcModes.ICMODE_COMPRESS);
 
             if (compressorHandle != IntPtr.Zero)
             {
                 var inHeader = inBitmapInfo;
                 var outHeader = outBitmapInfo;
-                var result = VfwApi.ICSendMessage(compressorHandle, VfwApi.ICM_COMPRESS_QUERY, ref inHeader, ref outHeader);
+                var result = (IcResults)VfwApi.ICSendMessage(compressorHandle, IcMessages.ICM_COMPRESS_QUERY, ref inHeader, ref outHeader);
 
-                if (result == VfwApi.ICERR_OK)
+                if (result.IsSuccess())
                 {
-                    var infoSize = VfwApi.ICGetInfo(compressorHandle, out compressorInfo, Marshal.SizeOf(typeof(VfwApi.CompressorInfo)));
+                    var infoSize = VfwApi.ICGetInfo(compressorHandle, out compressorInfo, Marshal.SizeOf(typeof(CompressorInfo)));
                     if (infoSize > 0 && compressorInfo.SupportsFastTemporalCompression)
                         return compressorHandle;
                 }
@@ -91,15 +93,15 @@ namespace SharpAvi.Codecs
                 VfwApi.ICClose(compressorHandle);
             }
 
-            compressorInfo = new VfwApi.CompressorInfo();
+            compressorInfo = new CompressorInfo();
             return IntPtr.Zero;
         }
 
-        private static VfwApi.BitmapInfoHeader CreateBitmapInfo(int width, int height, ushort bitCount, FourCC codec)
+        private static BitmapInfoHeader CreateBitmapInfo(int width, int height, ushort bitCount, FourCC codec)
         {
-            return new VfwApi.BitmapInfoHeader
+            return new BitmapInfoHeader
             {
-                SizeOfStruct = (uint)Marshal.SizeOf(typeof(VfwApi.BitmapInfoHeader)),
+                SizeOfStruct = (uint)Marshal.SizeOf(typeof(BitmapInfoHeader)),
                 Width = width,
                 Height = height,
                 BitCount = bitCount,
@@ -112,10 +114,10 @@ namespace SharpAvi.Codecs
         private readonly int _width;
         private readonly int _height;
         private readonly byte[] _sourceBuffer;
-        private readonly VfwApi.BitmapInfoHeader _inBitmapInfo;
-        private readonly VfwApi.BitmapInfoHeader _outBitmapInfo;
+        private readonly BitmapInfoHeader _inBitmapInfo;
+        private readonly BitmapInfoHeader _outBitmapInfo;
         private readonly IntPtr _compressorHandle;
-        private readonly VfwApi.CompressorInfo _compressorInfo;
+        private readonly CompressorInfo _compressorInfo;
         private readonly int _maxEncodedSize;
         private readonly int _quality;
         private readonly int _keyFrameRate;
@@ -227,12 +229,12 @@ namespace SharpAvi.Codecs
         {
             var inHeader = _inBitmapInfo;
             var outHeader = _outBitmapInfo;
-            return VfwApi.ICSendMessage(_compressorHandle, VfwApi.ICM_COMPRESS_GET_SIZE, ref inHeader, ref outHeader);
+            return VfwApi.ICSendMessage(_compressorHandle, IcMessages.ICM_COMPRESS_GET_SIZE, ref inHeader, ref outHeader);
         }
 
         private void InitCompressFramesInfo(double fps, int frameCount)
         {
-            var info = new VfwApi.CompressFramesInfo
+            var info = new CompressFramesInfo
             {
                 StartFrame = 0,
                 FrameCount = frameCount,
@@ -241,7 +243,7 @@ namespace SharpAvi.Codecs
             };
             AviUtils.SplitFrameRate((decimal)fps, out info.FrameRateNumerator, out info.FrameRateDenominator);
 
-            var result = VfwApi.ICSendMessage(_compressorHandle, VfwApi.ICM_COMPRESS_FRAMES_INFO, ref info, Marshal.SizeOf(typeof(VfwApi.CompressFramesInfo)));
+            var result = VfwApi.ICSendMessage(_compressorHandle, IcMessages.ICM_COMPRESS_FRAMES_INFO, ref info, Marshal.SizeOf(typeof(CompressFramesInfo)));
             CheckICResult(result);
         }
 
@@ -249,7 +251,7 @@ namespace SharpAvi.Codecs
         {
             var inHeader = _inBitmapInfo;
             var outHeader = _outBitmapInfo;
-            var result = VfwApi.ICSendMessage(_compressorHandle, VfwApi.ICM_COMPRESS_BEGIN, ref inHeader, ref outHeader);
+            var result = (IcResults)VfwApi.ICSendMessage(_compressorHandle, IcMessages.ICM_COMPRESS_BEGIN, ref inHeader, ref outHeader);
             CheckICResult(result);
 
             _needEnd = true;
@@ -258,7 +260,7 @@ namespace SharpAvi.Codecs
 
         private void EndCompression()
         {
-            var result = VfwApi.ICSendMessage(_compressorHandle, VfwApi.ICM_COMPRESS_END, IntPtr.Zero, IntPtr.Zero);
+            var result = VfwApi.ICSendMessage(_compressorHandle, IcMessages.ICM_COMPRESS_END, IntPtr.Zero, IntPtr.Zero);
             CheckICResult(result);
         }
 
@@ -292,7 +294,7 @@ namespace SharpAvi.Codecs
                 var outInfo = _outBitmapInfo;
                 outInfo.ImageSize = (uint)destination.Length;
                 var inInfo = _inBitmapInfo;
-                var flags = _framesFromLastKey >= _keyFrameRate ? VfwApi.ICCOMPRESS_KEYFRAME : 0;
+                var flags = _framesFromLastKey >= _keyFrameRate ? IcCompressFlags.ICCOMPRESS_KEYFRAME : IcCompressFlags.ICCOMPRESS_NONE;
 
                 var result = VfwApi.ICCompress(_compressorHandle, flags,
                     ref outInfo, encodedHandle.AddrOfPinnedObject(), ref inInfo, sourceHandle.AddrOfPinnedObject(),
@@ -302,7 +304,7 @@ namespace SharpAvi.Codecs
                 _frameIndex++;
 
 
-                isKeyFrame = (outFlags & VfwApi.AVIIF_KEYFRAME) == VfwApi.AVIIF_KEYFRAME;
+                isKeyFrame = (outFlags & AviIndexFlags.AVIIF_KEYFRAME) == AviIndexFlags.AVIIF_KEYFRAME;
                 if (isKeyFrame)
                 {
                     _framesFromLastKey = 1;
@@ -353,14 +355,14 @@ namespace SharpAvi.Codecs
         #endregion
 
 
-        private void CheckICResult(int result)
+        private void CheckICResult(IcResults result)
         {
-            if (result == VfwApi.ICERR_OK)
+            if (result.IsSuccess())
             {
                 return;
             }
 
-            var errorDesc = VfwApi.GetErrorDescription(result);
+            var errorDesc = result.GetErrorDescription();
             var resultStr = errorDesc == null
                 ? result.ToString()
                 : $"{result} ({errorDesc})";

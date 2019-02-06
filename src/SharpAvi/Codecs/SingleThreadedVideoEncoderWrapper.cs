@@ -4,6 +4,7 @@ using System.Diagnostics.Contracts;
 using System.Reflection;
 using System.Threading;
 using System.Windows.Threading;
+using SharpAvi.Enums;
 
 namespace SharpAvi.Codecs
 {
@@ -25,6 +26,7 @@ namespace SharpAvi.Codecs
         private readonly IVideoEncoder _encoder;
         private readonly Thread _thread;
         private readonly Dispatcher _dispatcher;
+        private readonly AutoResetEvent _dispatcherCreatedAutoResetEvent;
 
         /// <summary>
         /// Creates a new instance of <see cref="SingleThreadedVideoEncoderWrapper"/>.
@@ -42,11 +44,11 @@ namespace SharpAvi.Codecs
                 IsBackground = true,
                 Name = typeof(SingleThreadedVideoEncoderWrapper).Name
             };
-            // TODO: Make sure this is disposed
-            var dispatcherCreated = new AutoResetEvent(false);
-            _thread.Start(dispatcherCreated);
-            dispatcherCreated.WaitOne();
+            _dispatcherCreatedAutoResetEvent = new AutoResetEvent(false);
+            _thread.Start(_dispatcherCreatedAutoResetEvent);
+            _dispatcherCreatedAutoResetEvent.WaitOne();
             _dispatcher = Dispatcher.FromThread(_thread);
+
             // TODO: Create encoder on the first frame
             _encoder = DispatcherInvokeAndPropagateException(encoderFactory);
             if (_encoder == null)
@@ -72,6 +74,7 @@ namespace SharpAvi.Codecs
 
             _dispatcher.InvokeShutdown();
             _thread.Join();
+            _dispatcherCreatedAutoResetEvent.Dispose();
         }
 
         /// <summary>Codec ID.</summary>
@@ -110,8 +113,7 @@ namespace SharpAvi.Codecs
         /// </summary>
         public int EncodeFrame(byte[] source, int srcOffset, byte[] destination, int destOffset, out bool isKeyFrame)
         {
-            var result = DispatcherInvokeAndPropagateException(
-                () => EncodeFrame(source, srcOffset, destination, destOffset));
+            var result = DispatcherInvokeAndPropagateException(() => EncodeFrame(source, srcOffset, destination, destOffset));
             isKeyFrame = result.IsKeyFrame;
             return result.EncodedLength;
         }

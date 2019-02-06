@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics.Contracts;
 using SharpAvi.Codecs;
+using SharpAvi.Enums;
 
 namespace SharpAvi.Output
 {
@@ -48,21 +49,15 @@ namespace SharpAvi.Output
         /// <summary> Video codec. </summary>
         public override FourCC Codec
         {
-            get { return _encoder.Codec; }
-            set
-            {
-                ThrowPropertyDefinedByEncoder();
-            }
+            get => _encoder.Codec;
+            set => ThrowPropertyDefinedByEncoder();
         }
 
         /// <summary> Bits per pixel. </summary>
         public override BitsPerPixel BitsPerPixel
         {
-            get { return _encoder.BitsPerPixel; }
-            set
-            {
-                ThrowPropertyDefinedByEncoder();
-            }
+            get => _encoder.BitsPerPixel;
+            set => ThrowPropertyDefinedByEncoder();
         }
 
         /// <summary>Encodes and writes a frame.</summary>

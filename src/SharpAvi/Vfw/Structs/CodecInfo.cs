@@ -1,4 +1,4 @@
-﻿namespace SharpAvi.Codecs
+﻿namespace SharpAvi.Vfw.Structs
 {
     /// <summary>
     /// Information about a codec.

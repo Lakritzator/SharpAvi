@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics.Contracts;
 using System.Threading.Tasks;
+using SharpAvi.Enums;
 
 namespace SharpAvi.Output
 {
@@ -33,7 +34,7 @@ namespace SharpAvi.Output
 
         public int Width
         {
-            get { return _width; }
+            get => _width;
             set
             {
                 CheckNotFrozen();
@@ -43,7 +44,7 @@ namespace SharpAvi.Output
 
         public int Height
         {
-            get { return _height; }
+            get => _height;
             set
             {
                 CheckNotFrozen();
@@ -53,7 +54,7 @@ namespace SharpAvi.Output
 
         public BitsPerPixel BitsPerPixel
         {
-            get { return _bitsPerPixel; }
+            get => _bitsPerPixel;
             set
             {
                 CheckNotFrozen();
@@ -63,7 +64,7 @@ namespace SharpAvi.Output
 
         public FourCC Codec
         {
-            get { return _streamCodec; }
+            get => _streamCodec;
             set
             {
                 CheckNotFrozen();

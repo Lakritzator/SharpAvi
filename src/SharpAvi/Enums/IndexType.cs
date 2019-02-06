@@ -1,4 +1,4 @@
-﻿namespace SharpAvi
+﻿namespace SharpAvi.Enums
 {
     internal enum IndexType : byte
     {

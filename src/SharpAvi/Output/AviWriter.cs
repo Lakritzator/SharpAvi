@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using SharpAvi.Codecs;
+using SharpAvi.Enums;
 
 namespace SharpAvi.Output
 {

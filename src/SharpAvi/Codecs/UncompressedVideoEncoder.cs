@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics.Contracts;
+using SharpAvi.Enums;
 
 namespace SharpAvi.Codecs
 {
