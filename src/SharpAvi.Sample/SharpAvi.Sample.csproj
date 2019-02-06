@@ -7,6 +7,7 @@
     <AssemblyTitle>SharpAvi.Sample</AssemblyTitle>
     <AssemblyName>SharpAvi.Sample</AssemblyName>
     <RootNamespace>SharpAvi.Sample</RootNamespace>
+	<RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
   </PropertyGroup>
   
   <ItemGroup Condition="'$(TargetFramework)' != 'net471'">

@@ -4,15 +4,6 @@
         Title="SettingsWindow" ShowInTaskbar="False" WindowStartupLocation="CenterOwner"
         Height="300" Width="300" SizeToContent="Height"
         WindowStyle="None" AllowsTransparency="True" Background="White">
-    
-    <Window.Resources>
-        <ResourceDictionary>
-            <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="Styles.xaml"/>
-            </ResourceDictionary.MergedDictionaries>
-        </ResourceDictionary>
-    </Window.Resources>
-    
     <Border BorderBrush="DarkGray" BorderThickness="2"
             SnapsToDevicePixels="True">
         <DockPanel>
