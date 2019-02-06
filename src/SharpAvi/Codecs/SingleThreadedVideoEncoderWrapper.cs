@@ -111,16 +111,16 @@ namespace SharpAvi.Codecs
         /// <summary>
         /// Encodes video frame.
         /// </summary>
-        public int EncodeFrame(byte[] source, int srcOffset, byte[] destination, int destOffset, out bool isKeyFrame)
+        public int EncodeFrame(Memory<byte> source, Memory<byte> destination, out bool isKeyFrame)
         {
-            var result = DispatcherInvokeAndPropagateException(() => EncodeFrame(source, srcOffset, destination, destOffset));
+            var result = DispatcherInvokeAndPropagateException(() => EncodeFrame(source, destination));
             isKeyFrame = result.IsKeyFrame;
             return result.EncodedLength;
         }
 
-        private EncodeResult EncodeFrame(byte[] source, int srcOffset, byte[] destination, int destOffset)
+        private EncodeResult EncodeFrame(Memory<byte> source, Memory<byte> destination)
         {
-            var result = _encoder.EncodeFrame(source, srcOffset, destination, destOffset, out var isKeyFrame);
+            var result = _encoder.EncodeFrame(source, destination, out var isKeyFrame);
             return new EncodeResult
             {
                 EncodedLength = result,

@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.Contracts;
+﻿using System;
+using System.Diagnostics.Contracts;
 using SharpAvi.Enums;
 
 namespace SharpAvi.Codecs
@@ -14,7 +15,6 @@ namespace SharpAvi.Codecs
     {
         private readonly int _width;
         private readonly int _height;
-        private readonly byte[] _sourceBuffer;
 
         /// <summary>
         /// Creates a new instance of <see cref="UncompressedVideoEncoder"/>.
@@ -28,7 +28,6 @@ namespace SharpAvi.Codecs
 
             _width = width;
             _height = height;
-            _sourceBuffer = new byte[width * height * 4];
         }
 
         #region IVideoEncoder Members
@@ -50,10 +49,9 @@ namespace SharpAvi.Codecs
         /// Encodes a frame.
         /// </summary>
         /// <seealso cref="IVideoEncoder.EncodeFrame"/>
-        public int EncodeFrame(byte[] source, int srcOffset, byte[] destination, int destOffset, out bool isKeyFrame)
+        public int EncodeFrame(Memory<byte> source, Memory<byte> destination, out bool isKeyFrame)
         {
-            BitmapUtils.FlipVertical(source, srcOffset, _sourceBuffer, 0, _height, _width * 4);
-            BitmapUtils.Bgr32ToBgr24(_sourceBuffer, 0, destination, destOffset, _width * _height);
+            source.CopyTo(destination);
             isKeyFrame = true;
             return MaxEncodedSize;
         }

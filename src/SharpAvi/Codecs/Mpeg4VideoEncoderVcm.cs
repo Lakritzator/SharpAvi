@@ -280,7 +280,7 @@ namespace SharpAvi.Codecs
 
         /// <summary>Encodes a frame.</summary>
         /// <seealso cref="IVideoEncoder.EncodeFrame"/>
-        public int EncodeFrame(byte[] source, int srcOffset, byte[] destination, int destOffset, out bool isKeyFrame)
+        public int EncodeFrame(Memory<byte> source, Memory<byte> destination, out bool isKeyFrame)
         {
             // TODO: Introduce Width and Height in IVideoRecorder and add Requires to EncodeFrame contract
             Contract.Assert(srcOffset + 4 * _width * _height <= source.Length);

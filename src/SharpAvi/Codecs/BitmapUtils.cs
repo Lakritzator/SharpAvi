@@ -5,15 +5,9 @@ namespace SharpAvi.Codecs
 {
     internal static class BitmapUtils
     {
-        public static unsafe void Bgr32ToBgr24(byte[] source, int srcOffset, byte[] destination, int destOffset, int pixelCount)
+        public static unsafe void Bgr32ToBgr24(Memory<byte> source, Memory<byte> destination, int pixelCount)
         {
-            Contract.Requires(source != null);
-            Contract.Requires(srcOffset >= 0);
-            Contract.Requires(destination != null);
-            Contract.Requires(destOffset >= 0);
             Contract.Requires(pixelCount >= 0);
-            Contract.Requires(srcOffset + 4 * pixelCount <= source.Length);
-            Contract.Requires(destOffset + 3 * pixelCount <= destination.Length);
 
             fixed (byte* sourcePtr = source, destinationPtr = destination)
             {
@@ -32,7 +26,7 @@ namespace SharpAvi.Codecs
             }
         }
 
-        public static void FlipVertical(byte[] source, int srcOffset, byte[] destination, int destOffset, int height, int stride)
+        public static void FlipVertical(Memory<byte> source, Memory<byte> destination, int height, int stride)
         {
             Contract.Requires(source != null);
             Contract.Requires(destination != null);
