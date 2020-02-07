@@ -61,17 +61,18 @@ namespace SharpAvi.Output
         }
 
         /// <summary>Encodes and writes a frame.</summary>
-        public override void WriteFrame(bool isKeyFrame, byte[] frameData, int startIndex, int count)
+        public override void WriteFrame(bool isKeyFrame, Memory<byte> frameData)
         {
             // Prevent accessing encoded buffer by multiple threads simultaneously
             lock (_syncBuffer)
             {
-                count = _encoder.EncodeFrame(frameData, startIndex, _encodedBuffer, 0, out isKeyFrame);
-                base.WriteFrame(isKeyFrame, _encodedBuffer, 0, count);
+                var memory = _encodedBuffer.AsMemory();
+                var count = _encoder.EncodeFrame(frameData, memory, out isKeyFrame);
+                base.WriteFrame(isKeyFrame, memory.Slice(0, count));
             }
         }
 
-        public override System.Threading.Tasks.Task WriteFrameAsync(bool isKeyFrame, byte[] frameData, int startIndex, int length)
+        public override System.Threading.Tasks.Task WriteFrameAsync(bool isKeyFrame, Memory<byte> frameData)
         {
             throw new NotSupportedException("Asynchronous writes are not supported.");
         }

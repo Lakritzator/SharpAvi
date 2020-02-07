@@ -72,13 +72,13 @@ namespace SharpAvi.Output
             }
         }
 
-        public void WriteFrame(bool isKeyFrame, byte[] frameData, int startIndex, int count)
+        public void WriteFrame(bool isKeyFrame, Memory<byte> frameData)
         {
-            _writeHandler.WriteVideoFrame(this, isKeyFrame, frameData, startIndex, count);
+            _writeHandler.WriteVideoFrame(this, isKeyFrame, frameData);
             System.Threading.Interlocked.Increment(ref _framesWritten);
         }
 
-        public Task WriteFrameAsync(bool isKeyFrame, byte[] frameData, int startIndex, int count)
+        public Task WriteFrameAsync(bool isKeyFrame, Memory<byte> frameData)
         {
             throw new NotSupportedException("Asynchronous writes are not supported.");
         }

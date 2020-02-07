@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Runtime.InteropServices;
 
 namespace SharpAvi.Vfw.Structs
 {
@@ -6,6 +7,7 @@ namespace SharpAvi.Vfw.Structs
     /// Corresponds to the <c>ICINFO</c> structure.
     /// </summary>
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+    [SuppressMessage("ReSharper", "FieldCanBeMadeReadOnly.Local")]
     public unsafe struct CompressorInfo
     {
         private const int VIDCF_QUALITY = 0x0001;

@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.Contracts;
+﻿using System;
+using System.Diagnostics.Contracts;
 using System.Threading.Tasks;
 
 namespace SharpAvi.Output
@@ -16,14 +17,14 @@ namespace SharpAvi.Output
             Contract.Requires(baseStream != null);
         }
 
-        public override void WriteBlock(byte[] data, int startIndex, int length)
+        public override void WriteBlock(Memory<byte> data)
         {
-            _writeInvoker.Invoke(() => base.WriteBlock(data, startIndex, length));
+            _writeInvoker.Invoke(() => base.WriteBlock(data));
         }
 
-        public override Task WriteBlockAsync(byte[] data, int startIndex, int length)
+        public override Task WriteBlockAsync(Memory<byte> data)
         {
-            return _writeInvoker.InvokeAsync(() => base.WriteBlock(data, startIndex, length));
+            return _writeInvoker.InvokeAsync(() => base.WriteBlock(data));
         }
 
         public override void FinishWriting()

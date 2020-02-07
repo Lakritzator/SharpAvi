@@ -1,6 +1,8 @@
-﻿using System;
+﻿using SharpAvi.Enums;
+using System;
 using System.Diagnostics.Contracts;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows;
 using System.Windows.Media;
@@ -21,7 +23,7 @@ namespace SharpAvi.Codecs.MotionJpeg
     /// (like asynchronous calls), then consider wrapping it in <see cref="SingleThreadedVideoEncoderWrapper"/>.
     /// </para>
     /// <para>
-    /// This encoder is not fully conformant to the Motion JPEG standard, as each encoded frame is a full JPEG picture 
+    /// This encoder is not fully conform to the Motion JPEG standard, as each encoded frame is a full JPEG picture 
     /// with its own Huffman tables, and not those fixed Huffman tables defined by the Motion JPEG standard. 
     /// However, (at least most) modern decoders for Motion JPEG properly handle this situation.
     /// This also produces a little overhead on the file size.
@@ -31,7 +33,10 @@ namespace SharpAvi.Codecs.MotionJpeg
     {
         private readonly Int32Rect _rect;
         private readonly int _quality;
-        private readonly ThreadLocal<WriteableBitmap> _bitmapHolder;
+        private readonly ThreadLocal<BitmapSource> _bitmapHolder;
+        // IntPtr to the bits of the bitmap, if using the constructor with the IntPtr this will not be freed
+        private readonly IntPtr _bits;
+        private readonly int _bytesAllocated;
 
         /// <summary>
         /// Creates a new instance of <see cref="MotionJpegVideoEncoderWpf"/>.
@@ -51,9 +56,11 @@ namespace SharpAvi.Codecs.MotionJpeg
             _rect = new Int32Rect(0, 0, width, height);
             _quality = quality;
 
-            _bitmapHolder = new ThreadLocal<WriteableBitmap>(
-                () => new WriteableBitmap(_rect.Width, _rect.Height, 96, 96, PixelFormats.Bgr32, null),
-                false);
+            var stride = 4 * width;
+            _bytesAllocated = height * stride;
+            _bits = Marshal.AllocHGlobal(_bytesAllocated);
+            GC.AddMemoryPressure(_bytesAllocated);
+            _bitmapHolder = new ThreadLocal<BitmapSource>(() => BitmapSource.Create(_rect.Width, _rect.Height, 96, 96, PixelFormats.Bgr32, null, _bits, _bytesAllocated, stride), false);
         }
 
 
@@ -77,31 +84,39 @@ namespace SharpAvi.Codecs.MotionJpeg
         /// Encodes a frame.
         /// </summary>
         /// <seealso cref="IVideoEncoder.EncodeFrame"/>
-        public int EncodeFrame(byte[] source, int srcOffset, byte[] destination, int destOffset, out bool isKeyFrame)
+        public int EncodeFrame(Memory<byte> source, Memory<byte> destination, out bool isKeyFrame)
         {
-            var bitmap = _bitmapHolder.Value;
-            bitmap.WritePixels(_rect, source, _rect.Width * 4, srcOffset);
+            unsafe
+            {
+                var destinationSpan = new Span<byte>(_bits.ToPointer(), _bytesAllocated);
+                source.Span.CopyTo(destinationSpan);
+            }
 
             var encoderImpl = new JpegBitmapEncoder
             {
                 QualityLevel = _quality
             };
-            encoderImpl.Frames.Add(BitmapFrame.Create(bitmap));
+            encoderImpl.Frames.Add(BitmapFrame.Create(_bitmapHolder.Value));
+            using var stream = new MemoryStream(destination.ToArray());
+            encoderImpl.Save(stream);
+            stream.Flush();
+            var length = stream.Position;
+            stream.Close();
 
-            using (var stream = new MemoryStream(destination))
-            {
-                stream.Position = srcOffset;
-                encoderImpl.Save(stream);
-                stream.Flush();
-                var length = stream.Position - srcOffset;
-                stream.Close();
+            isKeyFrame = true;
 
-                isKeyFrame = true;
-
-                return (int)length;
-            }
+            return (int)length;
         }
 
+        public void Dispose()
+        {
+            if (_bits == IntPtr.Zero)
+            {
+                return;
+            }
+            Marshal.FreeHGlobal(_bits);
+            GC.RemoveMemoryPressure(_bytesAllocated);
+        }
         #endregion
     }
 }

@@ -7,6 +7,7 @@ using System.Windows.Interop;
 using NAudio.Wave;
 using SharpAvi.Codecs;
 using SharpAvi.Codecs.Lame;
+using SharpAvi.Vfw.Structs;
 
 namespace SharpAvi.Sample
 {

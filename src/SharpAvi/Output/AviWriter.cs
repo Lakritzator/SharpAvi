@@ -378,17 +378,17 @@ namespace SharpAvi.Output
 
         #region IAviStreamDataHandler implementation
 
-        void IAviStreamWriteHandler.WriteVideoFrame(AviVideoStream stream, bool isKeyFrame, byte[] frameData, int startIndex, int count)
+        void IAviStreamWriteHandler.WriteVideoFrame(AviVideoStream stream, bool isKeyFrame, Memory<byte> frameData)
         {
-            WriteStreamFrame(stream, isKeyFrame, frameData, startIndex, count);
+            WriteStreamFrame(stream, isKeyFrame, frameData);
         }
 
-        void IAviStreamWriteHandler.WriteAudioBlock(AviAudioStream stream, byte[] blockData, int startIndex, int count)
+        void IAviStreamWriteHandler.WriteAudioBlock(AviAudioStream stream, Memory<byte> frameData)
         {
-            WriteStreamFrame(stream, true, blockData, startIndex, count);
+            WriteStreamFrame(stream, true, frameData);
         }
 
-        private void WriteStreamFrame(AviStreamBase stream, bool isKeyFrame, byte[] frameData, int startIndex, int count)
+        private void WriteStreamFrame(AviStreamBase stream, bool isKeyFrame, Memory<byte> frameData)
         {
             lock (_syncWrite)
             {
@@ -412,10 +412,11 @@ namespace SharpAvi.Output
 
                 var shouldCreateIndex1Entry = _emitIndex1 && _isFirstRiff;
 
-                CreateNewRiffIfNeeded(count + (shouldCreateIndex1Entry ? Index1EntrySize : 0));
+                CreateNewRiffIfNeeded(frameData.Length + (shouldCreateIndex1Entry ? Index1EntrySize : 0));
 
-                var chunk = _fileWriter.OpenChunk(stream.ChunkId, count);
-                _fileWriter.Write(frameData, startIndex, count);
+                var chunk = _fileWriter.OpenChunk(stream.ChunkId, frameData.Length);
+                // TODO Optimize
+                _fileWriter.Write(frameData.ToArray());
                 _fileWriter.CloseItem(chunk);
 
                 si.OnFrameWritten(chunk.DataSize);
@@ -501,7 +502,10 @@ namespace SharpAvi.Output
             _fileWriter.Write((short)1); // planes
             _fileWriter.Write((ushort)videoStream.BitsPerPixel); // bits per pixel
             _fileWriter.Write((uint)videoStream.Codec); // compression (codec FOURCC)
-            var sizeInBytes = videoStream.Width * videoStream.Height * (((int)videoStream.BitsPerPixel) / 8);
+            // 0 size is safer for uncompressed formats not to bother with stride calculation
+            var sizeInBytes = videoStream.Codec == KnownFourCCs.Codecs.Uncompressed
+                ? 0
+                : videoStream.Width * videoStream.Height * (((int)videoStream.BitsPerPixel) / 8);
             _fileWriter.Write((uint)sizeInBytes); // image size in bytes
             _fileWriter.Write(0); // X pixels per meter
             _fileWriter.Write(0); // Y pixels per meter

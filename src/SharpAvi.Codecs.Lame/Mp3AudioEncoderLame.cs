@@ -115,17 +115,17 @@ namespace SharpAvi.Codecs.Lame
         /// <summary>
         /// Encodes block of audio data.
         /// </summary>
-        public int EncodeBlock(byte[] source, int sourceOffset, int sourceCount, byte[] destination, int destinationOffset)
+        public int EncodeBlock(Memory<byte> source, Memory<byte> destination)
         {
-            return _lame.Encode(source, sourceOffset, sourceCount / SAMPLE_BYTE_SIZE, destination, destinationOffset);
+            return _lame.Encode(source.Slice(0, source.Length / SAMPLE_BYTE_SIZE), destination);
         }
 
         /// <summary>
         /// Flushes internal encoder's buffers.
         /// </summary>
-        public int Flush(byte[] destination, int destinationOffset)
+        public int Flush(Memory<byte> dest)
         {
-            return _lame.FinishEncoding(destination, destinationOffset);
+            return _lame.FinishEncoding(dest);
         }
 
         /// <summary>

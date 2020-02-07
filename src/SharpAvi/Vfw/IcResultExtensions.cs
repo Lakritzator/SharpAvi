@@ -19,26 +19,24 @@ namespace SharpAvi.Vfw
         /// </summary>
         /// <param name="error">IcResults</param>
         /// <returns>string</returns>
-        public static string GetErrorDescription(this IcResults error)
-        {
-            switch (error)
+        public static string GetErrorDescription(this IcResults error) =>
+            error switch
             {
-                case IcResults.ICERR_OK: return "OK";
-                case IcResults.ICERR_UNSUPPORTED: return "Unsupported";
-                case IcResults.ICERR_BAD_FORMAT: return "Bad format";
-                case IcResults.ICERR_MEMORY: return "Memory";
-                case IcResults.ICERR_INTERNAL: return "Internal";
-                case IcResults.ICERR_BAD_FLAGS: return "Bad flags";
-                case IcResults.ICERR_BAD_PARAMETER: return "Bad parameter";
-                case IcResults.ICERR_BAD_SIZE: return "Bad size";
-                case IcResults.ICERR_BAD_HANDLE: return "Bad handle";
-                case IcResults.ICERR_CANNOT_UPDATE: return "Can't update";
-                case IcResults.ICERR_ABORT: return "Abort";
-                case IcResults.ICERR_ERROR: return "Error";
-                case IcResults.ICERR_BAD_BIT_DEPTH: return "Bad bit depth";
-                case IcResults.ICERR_BAD_IMAGE_SIZE: return "Bad image size";
-                default: return "Unknown " + error;
-            }
-        }
+                IcResults.ICERR_OK => "OK",
+                IcResults.ICERR_UNSUPPORTED => "Unsupported",
+                IcResults.ICERR_BAD_FORMAT => "Bad format",
+                IcResults.ICERR_MEMORY => "Memory",
+                IcResults.ICERR_INTERNAL => "Internal",
+                IcResults.ICERR_BAD_FLAGS => "Bad flags",
+                IcResults.ICERR_BAD_PARAMETER => "Bad parameter",
+                IcResults.ICERR_BAD_SIZE => "Bad size",
+                IcResults.ICERR_BAD_HANDLE => "Bad handle",
+                IcResults.ICERR_CANNOT_UPDATE => "Can't update",
+                IcResults.ICERR_ABORT => "Abort",
+                IcResults.ICERR_ERROR => "Error",
+                IcResults.ICERR_BAD_BIT_DEPTH => "Bad bit depth",
+                IcResults.ICERR_BAD_IMAGE_SIZE => "Bad image size",
+                _ => ("Unknown " + error)
+            };
     }
 }

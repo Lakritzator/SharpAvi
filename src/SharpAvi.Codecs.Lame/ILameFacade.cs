@@ -1,4 +1,6 @@
-﻿namespace SharpAvi.Codecs.Lame
+﻿using System;
+
+namespace SharpAvi.Codecs.Lame
 {
     /// <summary>
     /// Interface is used to access the API of the LAME DLL.
@@ -47,11 +49,11 @@
         /// <summary>
         /// Encodes a chunk of audio data.
         /// </summary>
-        int Encode(byte[] source, int sourceIndex, int sampleCount, byte[] dest, int destIndex);
+        int Encode(Memory<byte> source, Memory<byte> dest);
 
         /// <summary>
         /// Finalizes the encoding process.
         /// </summary>
-        int FinishEncoding(byte[] dest, int destIndex);
+        int FinishEncoding(Memory<byte> dest);
     }
 }

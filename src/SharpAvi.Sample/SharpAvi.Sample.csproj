@@ -1,12 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFrameworks>net471;netcoreapp3.0</TargetFrameworks>
+    <TargetFrameworks>net471;netcoreapp3.1</TargetFrameworks>
     <LangVersion>latest</LangVersion>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
     <AssemblyTitle>SharpAvi.Sample</AssemblyTitle>
     <AssemblyName>SharpAvi.Sample</AssemblyName>
     <RootNamespace>SharpAvi.Sample</RootNamespace>
+	<UseWindowsForms>true</UseWindowsForms>
   </PropertyGroup>
   
   <ItemGroup Condition="'$(TargetFramework)' != 'net471'">
@@ -42,6 +43,8 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="NAudio" Version="1.8.5" />
+    <PackageReference Include="System.Memory" Version="4.5.3" />
+    <PackageReference Include="Microsoft.DotNet.PlatformAbstractions" Version="3.1.1" />
+    <PackageReference Include="NAudio" Version="1.10.0" />
   </ItemGroup>
 </Project>

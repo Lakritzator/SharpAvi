@@ -103,13 +103,13 @@ namespace SharpAvi.Output
             }
         }
 
-        public void WriteBlock(byte[] buffer, int startIndex, int count)
+        public void WriteBlock(Memory<byte> buffer)
         {
-            _writeHandler.WriteAudioBlock(this, buffer, startIndex, count);
+            _writeHandler.WriteAudioBlock(this, buffer);
             System.Threading.Interlocked.Increment(ref _blocksWritten);
         }
 
-        public System.Threading.Tasks.Task WriteBlockAsync(byte[] data, int startIndex, int length)
+        public System.Threading.Tasks.Task WriteBlockAsync(Memory<byte> data)
         {
             throw new NotSupportedException("Asynchronous writes are not supported.");
         }

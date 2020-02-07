@@ -32,20 +32,17 @@ namespace SharpAvi.Output
 
         /// <summary>Writes a frame to the stream.</summary>
         /// <param name="isKeyFrame">Is this frame a key frame?</param>
-        /// <param name="frameData">Array containing the frame data.</param>
-        /// <param name="startIndex">Index of the first byte of the frame data.</param>
-        /// <param name="length">Length of the frame data.</param>
-        void WriteFrame(bool isKeyFrame, byte[] frameData, int startIndex, int length);
+        /// <param name="frameData">Memory containing the frame data.</param>
+        void WriteFrame(bool isKeyFrame, Memory<byte> frameData);
+
         /// <summary>Asynchronously writes a frame to the stream.</summary>
         /// <param name="isKeyFrame">Is this frame a key frame?</param>
         /// <param name="frameData">Array containing the frame data.</param>
-        /// <param name="startIndex">Index of the first byte of the frame data.</param>
-        /// <param name="length">Length of the frame data.</param>
         /// <returns>A task that represents the asynchronous write operation.</returns>
         /// <remarks>
         /// The contents of <paramref name="frameData"/> should not be modified until this write operation ends.
         /// </remarks>
-        Task WriteFrameAsync(bool isKeyFrame, byte[] frameData, int startIndex, int length);
+        Task WriteFrameAsync(bool isKeyFrame, Memory<byte> frameData);
 
         /// <summary>
         /// Number of frames written.
@@ -107,20 +104,14 @@ namespace SharpAvi.Output
                 }
             }
 
-            public void WriteFrame(bool isKeyFrame, byte[] frameData, int startIndex, int length)
+            public void WriteFrame(bool isKeyFrame, Memory<byte> frameData)
             {
-                Contract.Requires(frameData != null);
-                Contract.Requires(startIndex >= 0);
-                Contract.Requires(length >= 0);
-                Contract.Requires(startIndex + length <= frameData.Length);
+                Contract.Requires(!frameData.IsEmpty);
             }
 
-            public Task WriteFrameAsync(bool isKeyFrame, byte[] frameData, int startIndex, int length)
+            public Task WriteFrameAsync(bool isKeyFrame, Memory<byte> frameData)
             {
-                Contract.Requires(frameData != null);
-                Contract.Requires(startIndex >= 0);
-                Contract.Requires(length >= 0);
-                Contract.Requires(startIndex + length <= frameData.Length);
+                Contract.Requires(!frameData.IsEmpty);
                 Contract.Ensures(Contract.Result<Task>() != null);
                 throw new NotImplementedException();
             }

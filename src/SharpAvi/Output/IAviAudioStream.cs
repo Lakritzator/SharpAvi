@@ -63,21 +63,17 @@ namespace SharpAvi.Output
         /// Writes a block of audio data.
         /// </summary>
         /// <param name="data">Data buffer.</param>
-        /// <param name="startIndex">Start index of data.</param>
-        /// <param name="length">Length of data.</param>
         /// <remarks>
         /// Division of audio data into blocks may be arbitrary.
         /// However, it is reasonable to write blocks of approximately the same duration
         /// as a single video frame.
         /// </remarks>
-        void WriteBlock(byte[] data, int startIndex, int length);
+        void WriteBlock(Memory<byte> data);
 
         /// <summary>
         /// Asynchronously writes a block of audio data.
         /// </summary>
         /// <param name="data">Data buffer.</param>
-        /// <param name="startIndex">Start index of data.</param>
-        /// <param name="length">Length of data.</param>
         /// <returns>
         /// A task representing the asynchronous write operation.
         /// </returns>
@@ -87,7 +83,7 @@ namespace SharpAvi.Output
         /// as a single video frame.
         /// The contents of <paramref name="data"/> should not be modified until this write operation ends.
         /// </remarks>
-        Task WriteBlockAsync(byte[] data, int startIndex, int length);
+        Task WriteBlockAsync(Memory<byte> data);
 
         /// <summary>
         /// Number of blocks written.
@@ -188,20 +184,14 @@ namespace SharpAvi.Output
                 }
             }
 
-            public void WriteBlock(byte[] data, int startIndex, int length)
+            public void WriteBlock(Memory<byte> data)
             {
-                Contract.Requires(data != null);
-                Contract.Requires(startIndex >= 0);
-                Contract.Requires(length >= 0);
-                Contract.Requires(startIndex + length <= data.Length);
+                Contract.Requires(!data.IsEmpty);
             }
 
-            public Task WriteBlockAsync(byte[] data, int startIndex, int length)
+            public Task WriteBlockAsync(Memory<byte> data)
             {
-                Contract.Requires(data != null);
-                Contract.Requires(startIndex >= 0);
-                Contract.Requires(length >= 0);
-                Contract.Requires(startIndex + length <= data.Length);
+                Contract.Requires(!data.IsEmpty);
                 Contract.Ensures(Contract.Result<Task>() != null);
                 throw new NotImplementedException();
             }

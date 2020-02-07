@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using SharpAvi.Codecs.Lame.Enums;
 
@@ -16,7 +17,7 @@ namespace SharpAvi.Codecs.Lame
 
         public LameFacadeImpl()
         {
-            _context = lame_init();
+            _context = LameInit();
             CheckResult(_context != IntPtr.Zero, "lame_init");
         }
 
@@ -32,34 +33,34 @@ namespace SharpAvi.Codecs.Lame
                 return;
             }
 
-            lame_close(_context);
+            LameClose(_context);
             _closed = true;
         }
 
 
         public int ChannelCount
         {
-            get { return lame_get_num_channels(_context); }
-            set { lame_set_num_channels(_context, value); }
+            get { return LameGetNumChannels(_context); }
+            set { LameSetNumChannels(_context, value); }
         }
 
         public int InputSampleRate
         {
-            get { return lame_get_in_samplerate(_context); }
-            set { lame_set_in_samplerate(_context, value); }
+            get { return LameGetInSampleRate(_context); }
+            set { LameSetInSampleRate(_context, value); }
         }
 
         public int OutputBitRate
         {
-            get { return lame_get_brate(_context); }
-            set { lame_set_brate(_context, value); }
+            get { return LameGetBitRate(_context); }
+            set { LameSetBitRate(_context, value); }
         }
 
-        public int OutputSampleRate => lame_get_out_samplerate(_context);
+        public int OutputSampleRate => LameGetOutSampleRate(_context);
 
-        public int FrameSize => lame_get_framesize(_context);
+        public int FrameSize => LameGetFramesize(_context);
 
-        public int EncoderDelay => lame_get_encoder_delay(_context);
+        public int EncoderDelay => LameGetEncoderDelay(_context);
 
         public void PrepareEncoding()
         {
@@ -67,10 +68,10 @@ namespace SharpAvi.Codecs.Lame
             switch (ChannelCount)
             {
                 case 1:
-                    lame_set_mode(_context, MpegMode.Mono);
+                    LameSetMode(_context, MpegMode.Mono);
                     break;
                 case 2:
-                    lame_set_mode(_context, MpegMode.Stereo);
+                    LameSetMode(_context, MpegMode.Stereo);
                     break;
                 default:
                     ThrowInvalidChannelCount();
@@ -78,68 +79,49 @@ namespace SharpAvi.Codecs.Lame
             }
 
             // Disable VBR
-            lame_set_VBR(_context, VbrMode.Off);
+            LameSetVBR(_context, VbrMode.Off);
 
             // Prevent output of redundant headers
-            lame_set_write_id3tag_automatic(_context, false);
-            lame_set_bWriteVbrTag(_context, 0);
+            LameSetWriteId3TagAutomatic(_context, false);
+            LameSetBWriteVbrTag(_context, 0);
 
             // Ensure not decoding
-            lame_set_decode_only(_context, 0);
+            LameSetDecodeOnly(_context, 0);
 
             // Finally, initialize encoding process
-            int result = lame_init_params(_context);
+            int result = LameInitParams(_context);
             CheckResult(result == 0, "lame_init_params");
         }
 
-        public int Encode(byte[] source, int sourceIndex, int sampleCount, byte[] dest, int destIndex)
+        public int Encode(Memory<byte> source, Memory<byte> dest)
         {
-            GCHandle sourceHandle = GCHandle.Alloc(source, GCHandleType.Pinned);
-            GCHandle destHandle = GCHandle.Alloc(dest, GCHandleType.Pinned);
-            try
+            IntPtr sourcePtr = (IntPtr)source.Span.GetPinnableReference();
+            IntPtr destPtr = (IntPtr)dest.Span.GetPinnableReference();
+            int result = -1;
+            switch (ChannelCount)
             {
-                IntPtr sourcePtr = new IntPtr(sourceHandle.AddrOfPinnedObject().ToInt64() + sourceIndex);
-                IntPtr destPtr = new IntPtr(destHandle.AddrOfPinnedObject().ToInt64() + destIndex);
-                int outputSize = dest.Length - destIndex;
-                int result = -1;
-                switch (ChannelCount)
-                {
-                    case 1:
-                        result = lame_encode_buffer(_context, sourcePtr, sourcePtr, sampleCount, destPtr, outputSize);
-                        break;
-                    case 2:
-                        result = lame_encode_buffer_interleaved(_context, sourcePtr, sampleCount / 2, destPtr, outputSize);
-                        break;
-                    default:
-                        ThrowInvalidChannelCount();
-                        break;
-                }
+                case 1:
+                    result = LameEncodeBuffer(_context, sourcePtr, sourcePtr, source.Length, destPtr, dest.Length);
+                    break;
+                case 2:
+                    result = LameEncodeBufferInterleaved(_context, sourcePtr, source.Length / 2, destPtr, dest.Length);
+                    break;
+                default:
+                    ThrowInvalidChannelCount();
+                    break;
+            }
 
-                CheckResult(result >= 0, "lame_encode_buffer");
-                return result;
-            }
-            finally
-            {
-                sourceHandle.Free();
-                destHandle.Free();
-            }
+            CheckResult(result >= 0, "lame_encode_buffer");
+            return result;
         }
 
-        public int FinishEncoding(byte[] dest, int destIndex)
+        public int FinishEncoding(Memory<byte> dest)
         {
-            GCHandle destHandle = GCHandle.Alloc(dest, GCHandleType.Pinned);
-            try
-            {
-                IntPtr destPtr = new IntPtr(destHandle.AddrOfPinnedObject().ToInt64() + destIndex);
-                int destLength = dest.Length - destIndex;
-                int result = lame_encode_flush(_context, destPtr, destLength);
-                CheckResult(result >= 0, "lame_encode_flush");
-                return result;
-            }
-            finally
-            {
-                destHandle.Free();
-            }
+            IntPtr destPtr = (IntPtr)dest.Span.GetPinnableReference();
+            int destLength = dest.Length;
+            int result = LameEncodeFlush(_context, destPtr, destLength);
+            CheckResult(result >= 0, "lame_encode_flush");
+            return result;
         }
 
 
@@ -159,87 +141,87 @@ namespace SharpAvi.Codecs.Lame
 
         #region LAME DLL API
 
-        [DllImport(LameEncDllName, CallingConvention = CallingConvention.Cdecl)]
-        private static extern IntPtr lame_init();
+        [DllImport(LameEncDllName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "lame_init")]
+        private static extern IntPtr LameInit();
 
-        [DllImport(LameEncDllName, CallingConvention = CallingConvention.Cdecl)]
-        private static extern int lame_close(IntPtr context);
+        [DllImport(LameEncDllName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "lame_close")]
+        private static extern int LameClose(IntPtr context);
 
-        [DllImport(LameEncDllName, CallingConvention = CallingConvention.Cdecl)]
-        private static extern int lame_set_in_samplerate(IntPtr context, int value);
+        [DllImport(LameEncDllName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "lame_set_in_samplerate")]
+        private static extern int LameSetInSampleRate(IntPtr context, int value);
 
-        [DllImport(LameEncDllName, CallingConvention = CallingConvention.Cdecl)]
-        private static extern int lame_get_in_samplerate(IntPtr context);
+        [DllImport(LameEncDllName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "lame_get_in_samplerate")]
+        private static extern int LameGetInSampleRate(IntPtr context);
 
-        [DllImport(LameEncDllName, CallingConvention = CallingConvention.Cdecl)]
-        private static extern int lame_set_num_channels(IntPtr context, int value);
+        [DllImport(LameEncDllName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "lame_set_num_channels")]
+        private static extern int LameSetNumChannels(IntPtr context, int value);
         
-        [DllImport(LameEncDllName, CallingConvention = CallingConvention.Cdecl)]
-        private static extern int lame_get_num_channels(IntPtr context);
+        [DllImport(LameEncDllName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "lame_get_num_channels")]
+        private static extern int LameGetNumChannels(IntPtr context);
 
-        [DllImport(LameEncDllName, CallingConvention = CallingConvention.Cdecl)]
-        private static extern int lame_set_mode(IntPtr context, MpegMode value);
+        [DllImport(LameEncDllName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "lame_set_mode")]
+        private static extern int LameSetMode(IntPtr context, MpegMode value);
 
-        [DllImport(LameEncDllName, CallingConvention = CallingConvention.Cdecl)]
-        private static extern MpegMode lame_get_mode(IntPtr context);
+        [DllImport(LameEncDllName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "lame_get_mode")]
+        private static extern MpegMode LameGetMode(IntPtr context);
 
-        [DllImport(LameEncDllName, CallingConvention = CallingConvention.Cdecl)]
-        private static extern int lame_set_brate(IntPtr context, int value);
+        [DllImport(LameEncDllName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "lame_set_brate")]
+        private static extern int LameSetBitRate(IntPtr context, int value);
         
-        [DllImport(LameEncDllName, CallingConvention = CallingConvention.Cdecl)]
-        private static extern int lame_get_brate(IntPtr context);
+        [DllImport(LameEncDllName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "lame_get_brate")]
+        private static extern int LameGetBitRate(IntPtr context);
         
-        [DllImport(LameEncDllName, CallingConvention = CallingConvention.Cdecl)]
-        private static extern int lame_set_out_samplerate(IntPtr context, int value);
+        [DllImport(LameEncDllName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "lame_set_out_samplerate")]
+        private static extern int LameSetOutSampleRate(IntPtr context, int value);
         
-        [DllImport(LameEncDllName, CallingConvention = CallingConvention.Cdecl)]
-        private static extern int lame_get_out_samplerate(IntPtr context);
+        [DllImport(LameEncDllName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "lame_get_out_samplerate")]
+        private static extern int LameGetOutSampleRate(IntPtr context);
 
-        [DllImport(LameEncDllName, CallingConvention = CallingConvention.Cdecl)]
-        private static extern void lame_set_write_id3tag_automatic(IntPtr context, bool value);
+        [DllImport(LameEncDllName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "lame_set_write_id3tag_automatic")]
+        private static extern void LameSetWriteId3TagAutomatic(IntPtr context, bool value);
 
-        [DllImport(LameEncDllName, CallingConvention = CallingConvention.Cdecl)]
-        private static extern bool lame_get_write_id3tag_automatic(IntPtr context);
+        [DllImport(LameEncDllName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "lame_get_write_id3tag_automatic")]
+        private static extern bool LameGetWriteId3TagAutomatic(IntPtr context);
 
-        [DllImport(LameEncDllName, CallingConvention = CallingConvention.Cdecl)]
-        private static extern int lame_set_bWriteVbrTag(IntPtr context, int value);
+        [DllImport(LameEncDllName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "lame_set_bWriteVbrTag")]
+        private static extern int LameSetBWriteVbrTag(IntPtr context, int value);
 
-        [DllImport(LameEncDllName, CallingConvention = CallingConvention.Cdecl)]
-        private static extern int lame_get_bWriteVbrTag(IntPtr context);
+        [DllImport(LameEncDllName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "lame_get_bWriteVbrTag")]
+        private static extern int LameGetBWriteVbrTag(IntPtr context);
 
-        [DllImport(LameEncDllName, CallingConvention = CallingConvention.Cdecl)]
-        private static extern int lame_set_VBR(IntPtr context, VbrMode value);
+        [DllImport(LameEncDllName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "lame_set_VBR")]
+        private static extern int LameSetVBR(IntPtr context, VbrMode value);
         
-        [DllImport(LameEncDllName, CallingConvention = CallingConvention.Cdecl)]
-        private static extern VbrMode lame_get_VBR(IntPtr context);
+        [DllImport(LameEncDllName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "lame_get_VBR")]
+        private static extern VbrMode LameGetVBR(IntPtr context);
 
-        [DllImport(LameEncDllName, CallingConvention = CallingConvention.Cdecl)]
-        private static extern int lame_set_decode_only(IntPtr context, int value);
+        [DllImport(LameEncDllName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "lame_set_decode_only")]
+        private static extern int LameSetDecodeOnly(IntPtr context, int value);
         
-        [DllImport(LameEncDllName, CallingConvention = CallingConvention.Cdecl)]
-        private static extern int lame_get_decode_only(IntPtr context);
+        [DllImport(LameEncDllName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "lame_get_decode_only")]
+        private static extern int LameGetDecodeOnly(IntPtr context);
 
-        [DllImport(LameEncDllName, CallingConvention = CallingConvention.Cdecl)]
-        private static extern int lame_get_encoder_delay(IntPtr context);
+        [DllImport(LameEncDllName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "lame_get_encoder_delay")]
+        private static extern int LameGetEncoderDelay(IntPtr context);
 
-        [DllImport(LameEncDllName, CallingConvention = CallingConvention.Cdecl)]
-        private static extern int lame_get_framesize(IntPtr context);
+        [DllImport(LameEncDllName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "lame_get_framesize")]
+        private static extern int LameGetFramesize(IntPtr context);
 
-        [DllImport(LameEncDllName, CallingConvention = CallingConvention.Cdecl)]
-        private static extern int lame_init_params(IntPtr context);
+        [DllImport(LameEncDllName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "lame_init_params")]
+        private static extern int LameInitParams(IntPtr context);
 
-        [DllImport(LameEncDllName, CallingConvention = CallingConvention.Cdecl)]
-        private static extern int lame_encode_buffer(IntPtr context, 
+        [DllImport(LameEncDllName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "lame_encode_buffer")]
+        private static extern int LameEncodeBuffer(IntPtr context, 
             IntPtr bufferL, IntPtr bufferR, int nSamples,
             IntPtr mp3Buf, int mp3BufSize);
 
-        [DllImport(LameEncDllName, CallingConvention = CallingConvention.Cdecl)]
-        private static extern int lame_encode_buffer_interleaved(IntPtr context,
+        [DllImport(LameEncDllName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "lame_encode_buffer_interleaved")]
+        private static extern int LameEncodeBufferInterleaved(IntPtr context,
             IntPtr buffer, int nSamples,
             IntPtr mp3Buf, int mp3BufSize);
 
-        [DllImport(LameEncDllName, CallingConvention = CallingConvention.Cdecl)]
-        private static extern int lame_encode_flush(IntPtr context, IntPtr mp3Buf, int mp3BufSize);
+        [DllImport(LameEncDllName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "lame_encode_flush")]
+        private static extern int LameEncodeFlush(IntPtr context, IntPtr mp3Buf, int mp3BufSize);
 
         #endregion
     }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 
 namespace SharpAvi.Vfw.Structs
@@ -7,6 +8,7 @@ namespace SharpAvi.Vfw.Structs
     /// Corresponds to the <c>ICCOMPRESSFRAMES</c> structure.
     /// </summary>
     [StructLayout(LayoutKind.Sequential)]
+    [SuppressMessage("ReSharper", "FieldCanBeMadeReadOnly.Local")]
     public struct CompressFramesInfo
     {
         private uint flags;

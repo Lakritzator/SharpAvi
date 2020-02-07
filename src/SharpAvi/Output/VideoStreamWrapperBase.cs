@@ -55,14 +55,14 @@ namespace SharpAvi.Output
             set { _baseStream.Codec = value; }
         }
 
-        public virtual void WriteFrame(bool isKeyFrame, byte[] frameData, int startIndex, int length)
+        public virtual void WriteFrame(bool isKeyFrame, Memory<byte> frameData)
         {
-            _baseStream.WriteFrame(isKeyFrame, frameData, startIndex, length);
+            _baseStream.WriteFrame(isKeyFrame, frameData);
         }
 
-        public virtual Task WriteFrameAsync(bool isKeyFrame, byte[] frameData, int startIndex, int length)
+        public virtual Task WriteFrameAsync(bool isKeyFrame, Memory<byte> frameData)
         {
-            return _baseStream.WriteFrameAsync(isKeyFrame, frameData, startIndex, length);
+            return _baseStream.WriteFrameAsync(isKeyFrame, frameData);
         }
 
         public int FramesWritten => _baseStream.FramesWritten;

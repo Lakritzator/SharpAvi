@@ -103,21 +103,21 @@ namespace SharpAvi.Output
         /// <summary>
         /// Encodes and writes a block of audio data.
         /// </summary>
-        public override void WriteBlock(byte[] data, int startIndex, int length)
+        public override void WriteBlock(Memory<byte> data)
         {
             // Prevent accessing encoded buffer by multiple threads simultaneously
             lock (_syncBuffer)
             {
-                EnsureBufferIsSufficient(length);
-                var encodedLength = _encoder.EncodeBlock(data, startIndex, length, _encodedBuffer, 0);
+                EnsureBufferIsSufficient(data.Length);
+                var encodedLength = _encoder.EncodeBlock(data, _encodedBuffer);
                 if (encodedLength > 0)
                 {
-                    base.WriteBlock(_encodedBuffer, 0, encodedLength);
+                    base.WriteBlock(_encodedBuffer);
                 }
             }
         }
 
-        public override Task WriteBlockAsync(byte[] data, int startIndex, int length)
+        public override Task WriteBlockAsync(Memory<byte> data)
         {
             throw new NotSupportedException("Asynchronous writes are not supported.");
         }
@@ -143,10 +143,10 @@ namespace SharpAvi.Output
             {
                 // Flush the encoder
                 EnsureBufferIsSufficient(0);
-                var encodedLength = _encoder.Flush(_encodedBuffer, 0);
+                var encodedLength = _encoder.Flush(_encodedBuffer);
                 if (encodedLength > 0)
                 {
-                    base.WriteBlock(_encodedBuffer, 0, encodedLength);
+                    base.WriteBlock(_encodedBuffer);
                 }
             }
 

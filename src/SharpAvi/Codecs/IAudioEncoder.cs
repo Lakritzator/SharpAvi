@@ -63,22 +63,18 @@ namespace SharpAvi.Codecs
         /// Encodes block of audio data.
         /// </summary>
         /// <param name="source">Buffer with audio data.</param>
-        /// <param name="sourceOffset">Offset to start reading <paramref name="source"/>.</param>
-        /// <param name="sourceCount">Number of bytes to read from <paramref name="source"/>.</param>
         /// <param name="destination">Buffer for encoded audio data.</param>
-        /// <param name="destinationOffset">Offset to start writing to <paramref name="destination"/>.</param>
         /// <returns>The number of bytes written to <paramref name="destination"/>.</returns>
         /// <seealso cref="GetMaxEncodedLength"/>
-        int EncodeBlock(byte[] source, int sourceOffset, int sourceCount, byte[] destination, int destinationOffset);
+        int EncodeBlock(Memory<byte> source, Memory<byte> destination);
 
         /// <summary>
         /// Flushes internal encoder buffers if any.
         /// </summary>
         /// <param name="destination">Buffer for encoded audio data.</param>
-        /// <param name="destinationOffset">Offset to start writing to <paramref name="destination"/>.</param>
         /// <returns>The number of bytes written to <paramref name="destination"/>.</returns>
         /// <seealso cref="GetMaxEncodedLength"/>
-        int Flush(byte[] destination, int destinationOffset);
+        int Flush(Memory<byte> destination);
     }
 
 
@@ -142,22 +138,17 @@ namespace SharpAvi.Codecs
                 throw new NotImplementedException();
             }
 
-            public int EncodeBlock(byte[] source, int sourceOffset, int sourceCount, byte[] destination, int destinationOffset)
+            public int EncodeBlock(Memory<byte> source, Memory<byte> dest)
             {
-                Contract.Requires(source != null);
-                Contract.Requires(sourceOffset >= 0);
-                Contract.Requires(sourceCount >= 0);
-                Contract.Requires(sourceOffset + sourceCount <= source.Length);
-                Contract.Requires(destination != null);
-                Contract.Requires(destinationOffset >= 0);
+                Contract.Requires(!source.IsEmpty);
+                Contract.Requires(!dest.IsEmpty);
                 Contract.Ensures(Contract.Result<int>() >= 0);
                 throw new NotImplementedException();
             }
 
-            public int Flush(byte[] destination, int destinationOffset)
+            public int Flush(Memory<byte> dest)
             {
-                Contract.Requires(destination != null);
-                Contract.Requires(destinationOffset >= 0);
+                Contract.Requires(!dest.IsEmpty);
                 Contract.Ensures(Contract.Result<int>() >= 0);
                 throw new NotImplementedException();
             }

@@ -283,12 +283,12 @@ namespace SharpAvi.Codecs
         public int EncodeFrame(Memory<byte> source, Memory<byte> destination, out bool isKeyFrame)
         {
             // TODO: Introduce Width and Height in IVideoRecorder and add Requires to EncodeFrame contract
-            Contract.Assert(srcOffset + 4 * _width * _height <= source.Length);
+            Contract.Assert( 4 * _width * _height <= source.Length);
 
-            BitmapUtils.FlipVertical(source, srcOffset, _sourceBuffer, 0, _height, _width * 4);
+            BitmapUtils.FlipVertical(source, _sourceBuffer, _height, _width * 4);
 
             var sourceHandle = GCHandle.Alloc(_sourceBuffer, GCHandleType.Pinned);
-            var encodedHandle = GCHandle.Alloc(destination, GCHandleType.Pinned);
+            IntPtr encodedHandle = (IntPtr)destination.Span.GetPinnableReference();
             try
             {
                 var outInfo = _outBitmapInfo;
@@ -297,7 +297,7 @@ namespace SharpAvi.Codecs
                 var flags = _framesFromLastKey >= _keyFrameRate ? IcCompressFlags.ICCOMPRESS_KEYFRAME : IcCompressFlags.ICCOMPRESS_NONE;
 
                 var result = VfwApi.ICCompress(_compressorHandle, flags,
-                    ref outInfo, encodedHandle.AddrOfPinnedObject(), ref inInfo, sourceHandle.AddrOfPinnedObject(),
+                    ref outInfo, encodedHandle, ref inInfo, sourceHandle.AddrOfPinnedObject(),
                     out _, out var outFlags, _frameIndex,
                     0, _quality, IntPtr.Zero, IntPtr.Zero);
                 CheckICResult(result);
@@ -319,7 +319,6 @@ namespace SharpAvi.Codecs
             finally
             {
                 sourceHandle.Free();
-                encodedHandle.Free();
             }
         }
 

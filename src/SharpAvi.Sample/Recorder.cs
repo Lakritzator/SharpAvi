@@ -125,18 +125,14 @@ namespace SharpAvi.Sample
                 waveFormat.BitsPerSample);
         }
 
-        private static WaveFormat ToWaveFormat(SupportedWaveFormat waveFormat)
-        {
-            switch (waveFormat)
+        private static WaveFormat ToWaveFormat(SupportedWaveFormat waveFormat) =>
+            waveFormat switch
             {
-                case SupportedWaveFormat.WAVE_FORMAT_44M16:
-                    return new WaveFormat(44100, 16, 1);
-                case SupportedWaveFormat.WAVE_FORMAT_44S16:
-                    return new WaveFormat(44100, 16, 2);
-                default:
-                    throw new NotSupportedException("Wave formats other than '16-bit 44.1kHz' are not currently supported.");
-            }
-        }
+                SupportedWaveFormat.WAVE_FORMAT_44M16 => new WaveFormat(44100, 16, 1),
+                SupportedWaveFormat.WAVE_FORMAT_44S16 => new WaveFormat(44100, 16, 2),
+                _ => throw new NotSupportedException(
+                    "Wave formats other than '16-bit 44.1kHz' are not currently supported.")
+            };
 
         public void Dispose()
         {
@@ -190,7 +186,7 @@ namespace SharpAvi.Sample
                 }
 
                 // Start asynchronous (encoding and) writing of the new frame
-                videoWriteTask = _videoStream.WriteFrameAsync(true, buffer, 0, buffer.Length);
+                videoWriteTask = _videoStream.WriteFrameAsync(true, buffer);
 
                 timeTillNextFrame = TimeSpan.FromSeconds(shotsTaken / (double)_writer.FramesPerSecond - stopwatch.Elapsed.TotalSeconds);
                 if (timeTillNextFrame < TimeSpan.Zero)
@@ -213,17 +209,15 @@ namespace SharpAvi.Sample
 
         private void GetScreenshot(byte[] buffer)
         {
-            using (var bitmap = new Bitmap(_screenWidth, _screenHeight))
-            using (var graphics = Graphics.FromImage(bitmap))
-            {
-                graphics.CopyFromScreen(0, 0, 0, 0, new System.Drawing.Size(_screenWidth, _screenHeight));
-                var bits = bitmap.LockBits(new Rectangle(0, 0, _screenWidth, _screenHeight), ImageLockMode.ReadOnly, PixelFormat.Format32bppRgb);
-                Marshal.Copy(bits.Scan0, buffer, 0, buffer.Length);
-                bitmap.UnlockBits(bits);
+            using var bitmap = new Bitmap(_screenWidth, _screenHeight);
+            using var graphics = Graphics.FromImage(bitmap);
+            graphics.CopyFromScreen(0, 0, 0, 0, new System.Drawing.Size(_screenWidth, _screenHeight));
+            var bits = bitmap.LockBits(new Rectangle(0, 0, _screenWidth, _screenHeight), ImageLockMode.ReadOnly, PixelFormat.Format32bppRgb);
+            Marshal.Copy(bits.Scan0, buffer, 0, buffer.Length);
+            bitmap.UnlockBits(bits);
 
-                // Should also capture the mouse cursor here, but skipping for simplicity
-                // For those who are interested, look at http://www.codeproject.com/Articles/12850/Capturing-the-Desktop-Screen-with-the-Mouse-Cursor
-            }
+            // Should also capture the mouse cursor here, but skipping for simplicity
+            // For those who are interested, look at http://www.codeproject.com/Articles/12850/Capturing-the-Desktop-Screen-with-the-Mouse-Cursor
         }
 
         private void AudioSource_DataAvailable(object sender, WaveInEventArgs e)
@@ -234,7 +228,7 @@ namespace SharpAvi.Sample
                 return;
             }
 
-            _audioStream.WriteBlock(e.Buffer, 0, e.BytesRecorded);
+            _audioStream.WriteBlock(e.Buffer);
             _audioBlockWritten.Set();
         }
     }

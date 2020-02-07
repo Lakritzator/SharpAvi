@@ -35,7 +35,7 @@ namespace SharpAvi.BenchmarkTests
         [Benchmark]
         public void CaptureBuffered()
         {
-            _aviVideoStream.WriteFrame(false, _imageData, 0, Height * Width);
+            _aviVideoStream.WriteFrame(false, _imageData);
         }
 
         [GlobalCleanup]

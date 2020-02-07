@@ -15,6 +15,7 @@ namespace SharpAvi.Codecs
     {
         private readonly int _width;
         private readonly int _height;
+        private readonly int _stride;
 
         /// <summary>
         /// Creates a new instance of <see cref="UncompressedVideoEncoder"/>.
@@ -25,7 +26,8 @@ namespace SharpAvi.Codecs
         {
             Contract.Requires(width > 0);
             Contract.Requires(height > 0);
-
+            // Scan lines in Windows bitmaps should be aligned by 4 bytes (DWORDs)
+            _stride = (width * 3 + 3) / 4 * 4;
             _width = width;
             _height = height;
         }
@@ -43,7 +45,7 @@ namespace SharpAvi.Codecs
         /// <summary>
         /// Maximum size of encoded frame.
         /// </summary>
-        public int MaxEncodedSize => _width * _height * 3;
+        public int MaxEncodedSize => _stride * _height;
 
         /// <summary>
         /// Encodes a frame.
